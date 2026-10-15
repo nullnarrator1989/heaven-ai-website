@@ -1,273 +1,601 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>HEAVEN — The Living Gateway</title>
-  <meta name="description" content="HEAVEN — Build the Place We Wish Existed. Cinematic interactive gateway.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="HEAVEN — cinematic human-AI coordination gateway. Build the Place We Wish Existed." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#020306;--navy:#03061a;--ink:#eef6ff;--muted:#97a6c4;--cyan:#7fd4e8;--ice:#cfeefd;--gold:#f5c86e;--accentA:#3f8cff;--accentB:#ff9a3c}
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#060818);color:var(--ink);font-family:Inter,system-ui,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-    [dir="rtl"]{direction:rtl}
-    .page{min-height:100vh;display:flex;flex-direction:column}
-    header{position:sticky;top:0;z-index:80;padding:12px 18px;background:linear-gradient(180deg,rgba(3,6,12,0.5),rgba(3,6,12,0.2));backdrop-filter:blur(6px);display:flex;align-items:center;gap:12px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand img{width:48px;height:48px}
-    .brand .title{font-weight:800;letter-spacing:0.12em;font-size:15px}
-    .slogan{color:var(--muted);font-size:13px}
-    .langWrap{margin-inline-start:auto;display:flex;gap:10px;align-items:center}
-    .btn{background:transparent;border:1px solid rgba(127,212,232,0.06);color:var(--ice);padding:8px 12px;border-radius:10px;cursor:pointer}
-    .enter{background:linear-gradient(90deg,var(--cyan),#22b8d4);color:#021122;padding:10px 14px;border-radius:12px;font-weight:700;border:0}
-    main{display:flex;flex:1;align-items:center;justify-content:center;padding:28px}
-    .stage{width:100%;max-width:1180px;display:grid;grid-template-columns:1fr 360px;gap:20px}
-    .canvasWrap{background:transparent;border-radius:14px;overflow:hidden;position:relative;min-height:64vh}
-    #overlayUI{position:absolute;z-index:50;inset:0;pointer-events:none}
-    .hud{position:absolute;left:18px;top:18px;pointer-events:auto}
-    .hud .metrics{display:flex;gap:8px;background:rgba(255,255,255,0.02);padding:8px;border-radius:10px;border:1px solid rgba(127,212,232,0.03)}
-    .metrics .m{padding:6px 10px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);font-size:13px}
-    .ctaGroup{position:absolute;right:18px;bottom:18px;pointer-events:auto}
-    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:12px;padding:12px;border:1px solid rgba(127,212,232,0.03);max-height:70vh;overflow:auto}
-    .infoCol{display:flex;flex-direction:column;gap:12px}
-    .agentsList{display:flex;flex-direction:column;gap:8px}
-    .agentRow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;border:1px solid rgba(127,212,232,0.02);cursor:pointer}
-    .agentSwatch{width:12px;height:12px;border-radius:3px}
-    .small{font-size:13px;color:var(--muted)}
-    .titleH{font-weight:700;font-size:18px}
-    .demoControls{display:flex;gap:8px;margin-top:8px}
-    .log{background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;color:var(--muted);font-size:13px;max-height:160px;overflow:auto}
-    @media(max-width:980px){.stage{grid-template-columns:1fr}.panel{position:relative;max-width:100%}}
+    :root {
+      --bg: #030712;
+      --bg2: #081427;
+      --panel: rgba(12, 18, 32, 0.72);
+      --panel-2: rgba(15, 23, 39, 0.86);
+      --ink: #edf7ff;
+      --muted: #9eaec8;
+      --cyan: #7fd4e8;
+      --ice: #dff5ff;
+      --gold: #f5c86e;
+      --amber: #ff9a3c;
+      --blue: #3f8cff;
+      --lilac: #a98cff;
+      --green: #6fe2a5;
+      --line: rgba(127, 212, 232, 0.12);
+      --line-2: rgba(255,255,255,0.06);
+      --shadow: 0 20px 50px rgba(0,0,0,0.4);
+      --radius: 18px;
+      --max: 1200px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height:100%; background: radial-gradient(1200px 400px at 50% -10%, rgba(127, 212, 232, 0.10), transparent 60%), linear-gradient(180deg, var(--bg), var(--bg2)); color: var(--ink); font-family: 'Inter','Segoe UI',sans-serif; }
+    body { min-height:100vh; }
+    a { color: var(--cyan); text-decoration: none; }
+    button { font: inherit; }
+    [dir="rtl"] { direction: rtl; }
+    [dir="ltr"] { direction: ltr; }
+
+    .page {
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow-x:hidden;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(3,7,18,0.68), rgba(3,7,18,0.2));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      display:flex;
+      align-items:center;
+      gap: 16px;
+      padding: 12px 18px;
+    }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 46px; height: 46px; display:block; border-radius: 12px; overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 0 20px rgba(127,212,232,0.12);
+      background: rgba(255,255,255,0.015);
+    }
+
+    .brand-mark img { width:100%; height:100%; display:block; }
+    .brand-text { display:flex; flex-direction:column; gap: 2px; min-width:0; }
+    .brand-title { font-size: 15px; font-weight: 800; letter-spacing: 0.12em; }
+    .brand-sub { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+    .lang-wrap {
+      margin-inline-start: auto;
+      display:flex; align-items:center; gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance:none; border:1px solid rgba(127,212,232,0.12); background: rgba(255,255,255,0.02); color: var(--ice); border-radius: 999px; padding: 9px 14px; cursor:pointer; transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(127,212,232,0.22); box-shadow: 0 8px 20px rgba(127,212,232,0.09); }
+    .btn-primary {
+      border: 0; color: #071521; background: linear-gradient(90deg, var(--cyan), #22b8d4);
+      border-radius: 12px; padding: 10px 18px; font-weight: 800; box-shadow: 0 10px 28px rgba(34,184,212,0.18);
+    }
+
+    .hero {
+      max-width: var(--max);
+      width: 100%;
+      margin: 0 auto;
+      padding: 22px 18px 10px;
+      display:grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.8fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .visual-panel {
+      position: relative;
+      min-height: 660px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: radial-gradient(800px 260px at 50% 28%, rgba(127,212,232,0.08), transparent 60%), rgba(7,13,24,0.65);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .stage-grid {
+      position:absolute; inset:0; pointer-events:none; background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 24px 24px; mask-image: radial-gradient(circle at center, rgba(0,0,0,0.95), rgba(0,0,0,0.15));
+    }
+
+    #coreCanvas {
+      position:absolute; inset:0; width:100%; height:100%; display:block; background: transparent; z-index:1;
+    }
+
+    .hud-top {
+      position:absolute; inset: 18px 18px auto 18px; z-index: 5; display:flex; align-items:center; gap: 10px; flex-wrap: wrap;
+      pointer-events:none;
+    }
+
+    .pill {
+      display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.03); border:1px solid rgba(127,212,232,0.08); color: var(--ice); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .dot { width: 8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 10px rgba(111,226,165,0.7); }
+
+    .caption-box {
+      position:absolute; inset: auto auto 26px 26px; z-index:6; max-width: 500px; pointer-events:none;
+      background: rgba(8,15,27,0.40); border:1px solid var(--line); border-radius: 16px; padding: 16px 18px 14px; backdrop-filter: blur(6px);
+    }
+
+    .eyebrow { color: var(--gold); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; }
+    .headline { margin-top: 10px; font-size: clamp(1.4rem, 3vw, 2.5rem); line-height: 1.15; font-weight: 800; font-family: 'Cairo', 'Inter', sans-serif; }
+    .subline { margin-top: 8px; color: var(--muted); line-height: 1.7; max-width: 540px; }
+
+    .visual-actions {
+      position:absolute; right: 22px; bottom: 24px; z-index: 6; display:flex; flex-direction:column; align-items:flex-end; gap: 10px; pointer-events:auto;
+    }
+
+    .action-row {
+      display:flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+    }
+
+    .main-panel {
+      display:flex; flex-direction:column; gap: 14px;
+    }
+
+    .panel {
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+    }
+
+    .qutmir {
+      display:flex; gap: 12px; align-items:center; padding: 8px 0 14px;
+    }
+    .qutmir-glyph {
+      width: 54px; height: 54px; border-radius: 16px; display:flex; align-items:center; justify-content:center; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.24), rgba(255,255,255,0.015)), linear-gradient(135deg, rgba(127,212,232,0.8), rgba(255,154,60,0.8)); box-shadow: 0 0 28px rgba(127,212,232,0.15);
+      border:1px solid rgba(255,255,255,0.12);
+      position:relative;
+      overflow:hidden;
+    }
+    .qutmir-glyph:before, .qutmir-glyph:after {
+      content: ""; position:absolute; inset: 12px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35); transform: rotate(45deg);
+    }
+    .qutmir-glyph:after { inset: 20px; border-radius: 18px; }
+
+    .section-head {
+      display:flex; align-items:center; justify-content:space-between; gap: 12px;
+      margin-bottom: 10px;
+    }
+    .section-label { font-size: 12px; letter-spacing: 0.18em; color: var(--gold); text-transform: uppercase; }
+
+    .stats {
+      display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px;
+    }
+    .stat {
+      padding: 12px 12px 11px; border-radius: 14px; border: 1px solid rgba(127,212,232,0.08); background: rgba(255,255,255,0.02);
+    }
+    .stat .n { font-size: 1.6rem; font-weight:800; }
+    .stat .l { margin-top:4px; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
+
+    .agent-list { display:flex; flex-direction:column; gap: 8px; }
+    .agent-item {
+      display:flex; align-items:flex-start; gap: 12px; padding: 10px 10px; border-radius: 12px; border:1px solid rgba(127,212,232,0.08); background: rgba(255,255,255,0.01); cursor:pointer; transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .agent-item:hover { border-color: rgba(127,212,232,0.18); transform: translateY(-1px); }
+    .agent-swatch { width: 12px; height: 12px; border-radius: 4px; margin-top: 7px; box-shadow: 0 0 16px rgba(255,255,255,0.2); }
+    .agent-meta { flex:1; min-width:0; }
+    .agent-name { font-weight:700; font-size: 14px; }
+    .agent-role { margin-top:3px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .stage-strip {
+      display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 14px;
+    }
+    .stage-card {
+      padding: 12px; border-radius: 12px; border:1px solid var(--line); background: rgba(255,255,255,0.02); min-height: 110px; position:relative; overflow:hidden;
+    }
+    .stage-card:before { content:''; position:absolute; inset:0 auto auto 0; width: 100%; height: 2px; background: linear-gradient(90deg, rgba(127,212,232,0.5), transparent); }
+    .stage-index { color: var(--gold); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; }
+    .stage-title { margin-top: 8px; font-size: 18px; font-weight:700; }
+    .stage-copy { margin-top: 6px; color: var(--muted); font-size: 12px; line-height:1.6; }
+
+    .log { margin-top: 14px; display:flex; flex-direction:column; gap:8px; max-height: 270px; overflow:auto; padding-right:4px; }
+    .log-item { border-left: 2px solid rgba(127,212,232,0.22); padding: 8px 10px 8px 12px; background: rgba(255,255,255,0.02); border-radius: 0 10px 10px 0; color: var(--muted); font-size: 12px; line-height:1.6; }
+
+    .sim-controls { display:flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+    @media (max-width: 980px){
+      .hero { grid-template-columns: 1fr; }
+      .visual-panel { min-height: 560px; }
+      .caption-box { max-width: 70%; }
+    }
+
+    @media (max-width: 560px){
+      .topbar-inner { padding: 10px 12px; }
+      .hero { padding: 12px 12px 18px; }
+      .brand-title { letter-spacing: 0.08em; }
+      .brand-sub { display:none; }
+      .visual-panel { min-height: 470px; }
+      .caption-box { inset: auto 12px 16px 12px; max-width: none; }
+      .visual-actions { inset: auto 12px 12px auto; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stage-strip { grid-template-columns: 1fr; }
+      .sim-controls { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
   </style>
 </head>
 <body>
   <div class="page">
-    <header>
-      <a class="brand" href="index.html" aria-label="HEAVEN home">
-        <img src="assets/heaven-mark-transparent.png" alt="HEAVEN">
-        <div>
-          <div class="title">HEAVEN</div>
-          <div class="slogan">Build the Place We Wish Existed.</div>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand" aria-label="HEAVEN brand">
+          <span class="brand-mark"><img src="assets/heaven-mark-transparent.png" alt="HEAVEN" /></span>
+          <div class="brand-text">
+            <div class="brand-title">HEAVEN</div>
+            <div class="brand-sub">Build the Place We Wish Existed.</div>
+          </div>
         </div>
-      </a>
-      <div class="langWrap">
-        <button id="langBtn" class="btn" aria-label="toggle language">English</button>
-        <a id="enterLink" class="enter" href="https://perchance.org/heaven-ai">دخول إلى HEAVEN</a>
+
+        <div class="lang-wrap">
+          <button id="langBtn" class="btn" aria-label="Switch language">English</button>
+          <a class="btn btn-primary" href="https://perchance.org/heaven-ai">دخول إلى HEAVEN</a>
+        </div>
       </div>
     </header>
 
-    <main>
-      <section class="stage">
-        <div class="canvasWrap" id="canvasWrap">
-          <div id="overlayUI">
-            <div class="hud">
-              <div class="metrics" aria-hidden="false"><div class="m small">SIMULATION DATA</div><div class="m">NEEDS: <span id="mNeeds">—</span></div><div class="m">MATCHES: <span id="mMatches">—</span></div><div class="m">REVIEWS: <span id="mReviews">—</span></div><div class="m">CONFIRMED: <span id="mConfirmed">—</span></div></div>
-            </div>
-            <div class="ctaGroup">
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-                <button id="demoOpen" class="btn">عـرض تـوضيحي — Demo</button>
-                <a class="enter" href="https://perchance.org/heaven-ai">Enter HEAVEN</a>
-              </div>
-            </div>
-          </div>
-          <div id="threeRoot" style="width:100%;height:100%;position:relative"></div>
+    <main class="hero">
+      <section class="visual-panel" aria-label="HEAVEN simulation scene">
+        <div class="stage-grid" aria-hidden="true"></div>
+        <canvas id="coreCanvas"></canvas>
+
+        <div class="hud-top">
+          <div class="pill"><span class="dot"></span><span>Simulation data</span></div>
+          <div class="pill">Arabic default</div>
         </div>
 
-        <aside class="panel infoCol" aria-label="Inspector and agents">
-          <div>
-            <div class="titleH">Qutmir — Supervisory AI</div>
-            <div class="small">Distinctive supervisory identity derived from the HEAVEN gateway accent. Click agents or nodes in the visual to inspect.</div>
-          </div>
+        <div class="caption-box">
+          <div class="eyebrow">HEAVEN</div>
+          <div class="headline" id="heroHeadline">مرحباً بك في HEAVEN</div>
+          <div class="subline" id="heroCopy">منظومة تنسّق بين من يحتاج المساعدة ومن يستطيع تقديمها.</div>
+        </div>
 
-          <div>
-            <div class="titleH">Agent Workforce</div>
-            <div class="agentsList" id="agentsList"></div>
+        <div class="visual-actions">
+          <div class="action-row">
+            <button id="demoBtn" class="btn">عرض توضيحي</button>
+            <a href="https://perchance.org/heaven-ai" class="btn btn-primary">Enter HEAVEN</a>
           </div>
-
-          <div>
-            <div class="titleH">Simulation Controls</div>
-            <div class="demoControls">
-              <button id="simStart" class="btn">Start</button>
-              <button id="simPause" class="btn">Pause</button>
-              <button id="simStep" class="btn">Step</button>
-              <button id="simReset" class="btn">Reset</button>
-            </div>
-            <div class="log" id="eventLog" aria-live="polite"></div>
-          </div>
-        </aside>
+        </div>
       </section>
+
+      <aside class="main-panel">
+        <div class="panel">
+          <div class="section-head">
+            <div class="section-label">Qutmir</div>
+          </div>
+          <div class="qutmir">
+            <div class="qutmir-glyph" aria-hidden="true"></div>
+            <div>
+              <div style="font-weight:800; font-size: 17px;">Qutmir</div>
+              <div class="subline" style="margin-top:4px; color: var(--muted); font-size: 12px; max-width: none;">Supervisory intelligence orchestrating the agent workforce and human review.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <div class="section-label">Metrics</div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="n" id="mNeeds">03</div><div class="l">Needs</div></div>
+            <div class="stat"><div class="n" id="mMatches">07</div><div class="l">Matches</div></div>
+            <div class="stat"><div class="n" id="mReviews">02</div><div class="l">Reviews</div></div>
+            <div class="stat"><div class="n" id="mConfirmed">01</div><div class="l">Confirmed</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <div class="section-label">Agent work</div>
+          </div>
+          <div class="agent-list" id="agentList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <div class="section-label">Simulation</div>
+          </div>
+          <div class="sim-controls">
+            <button id="startBtn" class="btn">Start</button>
+            <button id="pauseBtn" class="btn">Pause</button>
+            <button id="stepBtn" class="btn">Step</button>
+            <button id="resetBtn" class="btn">Reset</button>
+          </div>
+          <div class="log" id="eventLog" aria-live="polite"></div>
+        </div>
+      </aside>
     </main>
 
-    <footer style="padding:18px;text-align:center;color:var(--muted)">
-      Verified link: <a href="https://perchance.org/heaven-ai">Open HEAVEN platform</a> — Arabic-first. All demonstration data is fictional.
+    <div style="max-width: var(--max); margin: 0 auto; width:100%; padding: 8px 18px 40px;">
+      <div class="stage-strip">
+        <div class="stage-card">
+          <div class="stage-index">01</div>
+          <div class="stage-title">Need Intake</div>
+          <div class="stage-copy">Requests are structured into actionable needs with essential context.</div>
+        </div>
+        <div class="stage-card">
+          <div class="stage-index">02</div>
+          <div class="stage-title">AI Matching</div>
+          <div class="stage-copy">Potential resources are compared against explicit constraints and suitability.</div>
+        </div>
+        <div class="stage-card">
+          <div class="stage-index">03</div>
+          <div class="stage-title">Human Review</div>
+          <div class="stage-copy">Important decisions pause for human judgment rather than being treated as automatic.</div>
+        </div>
+      </div>
+    </div>
+
+    <footer style="padding: 0 18px 30px; text-align:center; color: var(--muted);">
+      Verified link: <a href="https://perchance.org/heaven-ai">Open HEAVEN platform</a>
     </footer>
   </div>
 
-  <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
   <script>
-  // Implementation notes: cinematic central sculpture (approximated morph), agent nodes, particle handoffs.
-  (function(){
-    // configuration
-    const ROOT = document.getElementById('threeRoot');
-    const W = ROOT.clientWidth, H = Math.max(window.innerHeight*0.66, 560);
-    ROOT.style.height = H + 'px';
-
-    // scene setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, ROOT.clientWidth/ROOT.clientHeight, 0.1, 2000);
-    camera.position.set(0, 0, 420);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
-    renderer.setSize(ROOT.clientWidth, ROOT.clientHeight);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    ROOT.appendChild(renderer.domElement);
-
-    // lighting
-    const amb = new THREE.AmbientLight(0xffffff, 0.06);
-    scene.add(amb);
-    const key = new THREE.PointLight(0x7fd4e8, 1.2, 1400, 2);
-    key.position.set(200,200,300); scene.add(key);
-    const rim = new THREE.PointLight(0xff9a3c, 0.6, 800, 2); rim.position.set(-200,-160,220); scene.add(rim);
-
-    // central sculpture: base icosahedron with high subdivision to allow smooth displacement
-    const baseGeom = new THREE.IcosahedronGeometry(120, 5); // ~ many vertices
-    // create a copy of original positions
-    const posBase = baseGeom.attributes.position.array.slice();
-
-    // create canvas texture with moving typographic strips
-    const textCanvas = document.createElement('canvas'); textCanvas.width = 1024; textCanvas.height = 1024;
-    const tctx = textCanvas.getContext('2d'); tctx.fillStyle = 'rgba(0,0,0,0)'; tctx.fillRect(0,0,1024,1024);
-    function drawTextAtlas(){ tctx.clearRect(0,0,1024,1024); tctx.fillStyle='rgba(255,255,255,0.95)'; tctx.font='42px Cairo, Inter, sans-serif';
-      const phrases = ['NEED IDENTIFIED','RESOURCE DISCOVERED','POTENTIAL MATCH','HUMAN REVIEW REQUIRED','REFERRAL INITIATED','FOLLOW-UP PENDING','OUTCOME NOT YET CONFIRMED','PRIVACY PROTECTED'];
-      for(let i=0;i<32;i++){ const txt = phrases[i%phrases.length]; const x = (i*67)%1024; const y = 40 + (i*31)%980; tctx.globalAlpha = 0.06 + (i%6)/14; tctx.fillText(txt,x,y); }
-    }
-    drawTextAtlas();
-    const textTex = new THREE.CanvasTexture(textCanvas); textTex.needsUpdate = true; textTex.wrapS = textTex.wrapT = THREE.RepeatWrapping;
-
-    // material: luminous with slight fresnel and map
-    const mat = new THREE.MeshStandardMaterial({ color:0x06203a, metalness:0.12, roughness:0.35, emissive:0x072b38, emissiveIntensity:0.9, map:textTex, transparent:true, opacity:0.98 });
-    const sculpture = new THREE.Mesh(baseGeom, mat); sculpture.frustumCulled = false; scene.add(sculpture);
-
-    // subtle vertex displacement function using per-vertex noise (CPU approximation)
-    const vcount = baseGeom.attributes.position.count;
-    const offsets = new Float32Array(vcount*3);
-    for(let i=0;i<vcount;i++){ offsets[i*3+0] = (Math.random()-0.5)*1.2; offsets[i*3+1] = (Math.random()-0.5)*1.2; offsets[i*3+2] = (Math.random()-0.5)*1.2; }
-
-    // agents: place small nodes around
-    const AGENTS = [
-      {id:'intake',name:{ar:'وكيل الاستقبال',en:'Intake Agent'}, color:0x7fd4e8},
-      {id:'verify',name:{ar:'وكيل التحقق',en:'Verification'}, color:0xb48cff},
-      {id:'discover',name:{ar:'وكيل الاكتشاف',en:'Discovery'}, color:0x3f8cff},
-      {id:'match',name:{ar:'وكيل المطابقة',en:'Matching'}, color:0x53e0c8},
-      {id:'coord',name:{ar:'وكيل التنسيق',en:'Coordination'}, color:0xf5c86e},
-      {id:'follow',name:{ar:'وكيل المتابعة',en:'Follow-up'}, color:0x4ade80}
-    ];
-    const agentObjs = [];
-    const radius = 260;
-    AGENTS.forEach((a, i)=>{
-      const angle = (i/AGENTS.length) * Math.PI*2 - Math.PI/6;
-      const x = Math.cos(angle)*radius; const y = Math.sin(angle)*radius*0.62; const z = Math.sin(angle*1.3)*40;
-      const g = new THREE.Mesh(new THREE.SphereGeometry(10,16,12), new THREE.MeshStandardMaterial({color:a.color,emissive:a.color,emissiveIntensity:0.8,metalness:0.2,roughness:0.3}));
-      g.position.set(x,y,z); g.userData = a; scene.add(g); agentObjs.push(g);
-      // attach small ring
-      const ring = new THREE.Mesh(new THREE.RingGeometry(14,18,32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.06})); ring.position.copy(g.position); ring.rotation.x = Math.PI/2; scene.add(ring);
-    });
-
-    // particle pulses (simple moving spheres)
-    const pulses = [];
-    function spawnPulse(fromVec, toVec, color=0xffffff){ const mesh = new THREE.Mesh(new THREE.SphereGeometry(3.4,8,8), new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.9,roughness:0.2})); mesh.position.copy(fromVec); mesh.userData = {t:0, from:fromVec.clone(), to:toVec.clone()}; scene.add(mesh); pulses.push(mesh); }
-
-    // helper: world pos of sculpture center
-    const center = new THREE.Vector3(0,0,0);
-
-    // basic orbit and subtle camera moves
-    let tStart = performance.now();
-    function animate(now){ const t = (now - tStart)/1000;
-      // sculpt morph: compute a factor that cycles 0..1 over 36s
-      const cycle = 36; const phase = (t % cycle)/cycle; // 0..1
-      // displace vertices CPU-side for now (cheap enough for prototype)
-      const pos = sculpture.geometry.attributes.position;
-      for(let i=0;i<pos.count;i++){
-        const bx = posBase[i*3+0], by = posBase[i*3+1], bz = posBase[i*3+2];
-        // create simple morph impression by scaling and adding sin-based displacement based on phase
-        const s = 1 + 0.08 * Math.sin(phase*Math.PI*2 + i*0.0005* (i%7+1));
-        let nx = bx * s; let ny = by * s; let nz = bz * s;
-        // subtle cube-like pinch when phase between 0.25-0.5
-        const cubePhase = Math.max(0, 1 - Math.abs((phase-0.35)/0.15)); nx += Math.sign(nx)*cubePhase*8; ny += Math.sign(ny)*cubePhase*8; nz += Math.sign(nz)*cubePhase*8;
-        // torus-like belt when phase around 0.6-0.8
-        const torusPhase = Math.max(0, 1 - Math.abs((phase-0.7)/0.12)); const r = Math.sqrt(nx*nx + nz*nz); nx = nx*(1 - torusPhase*0.2); nz = nz*(1 - torusPhase*0.2); ny += torusPhase*10*Math.sin(i*0.01 + t*2);
-        // apply small random offsets
-        nx += offsets[i*3]*Math.sin(t*0.8 + i*0.03);
-        ny += offsets[i*3+1]*Math.cos(t*0.6 + i*0.02);
-        nz += offsets[i*3+2]*Math.sin(t*0.4 + i*0.04);
-        pos.array[i*3] = nx; pos.array[i*3+1] = ny; pos.array[i*3+2] = nz;
-      }
-      pos.needsUpdate = true;
-      sculpture.rotation.y += 0.0018;
-      sculpture.rotation.x = 0.06*Math.sin(t*0.3);
-
-      // pulses animation
-      for(let i=pulses.length-1;i>=0;i--){ const p = pulses[i]; p.userData.t += 0.012 + 0.01*Math.sin(t*2 + i); const tt = p.userData.t; p.position.lerpVectors(p.userData.from,p.userData.to, tt); if(tt>=1){ scene.remove(p); pulses.splice(i,1); }
+    (() => {
+      const langBtn = document.getElementById('langBtn');
+      const heroHeadline = document.getElementById('heroHeadline');
+      const heroCopy = document.getElementById('heroCopy');
+      const demoBtn = document.getElementById('demoBtn');
+      const enterLinks = document.querySelectorAll('a[href="https://perchance.org/heaven-ai"]');
+      for (const link of enterLinks) {
+        link.setAttribute('rel', 'noopener noreferrer');
       }
 
-      // subtle camera bob
-      camera.position.x = Math.sin(t*0.08)*18; camera.position.y = Math.sin(t*0.05)*12; camera.lookAt(center);
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+      const content = {
+        ar: {
+          headline: 'مرحباً بك في HEAVEN',
+          copy: 'منظومة تنسّق بين من يحتاج المساعدة ومن يستطيع تقديمها.',
+          demo: 'عرض توضيحي',
+          start: 'ابدأ',
+          pause: 'إيقاف',
+          step: 'خطوة',
+          reset: 'إعادة',
+          english: 'English',
+          enter: 'دخول إلى HEAVEN'
+        },
+        en: {
+          headline: 'Welcome to HEAVEN',
+          copy: 'A coordination system connecting people who need help with people ready to provide it.',
+          demo: 'Demo',
+          start: 'Start',
+          pause: 'Pause',
+          step: 'Step',
+          reset: 'Reset',
+          english: 'العربية',
+          enter: 'Enter HEAVEN'
+        }
+      };
 
-    // resize handling
-    window.addEventListener('resize', ()=>{ const W = ROOT.clientWidth, H = ROOT.clientHeight; renderer.setSize(W,H); camera.aspect = W/H; camera.updateProjectionMatrix(); });
+      function applyLanguage(lang) {
+        const map = content[lang];
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        heroHeadline.textContent = map.headline;
+        heroCopy.textContent = map.copy;
+        demoBtn.textContent = map.demo;
+        document.getElementById('startBtn').textContent = map.start;
+        document.getElementById('pauseBtn').textContent = map.pause;
+        document.getElementById('stepBtn').textContent = map.step;
+        document.getElementById('resetBtn').textContent = map.reset;
+        langBtn.textContent = map.english;
+        const links = document.querySelectorAll('a[href="https://perchance.org/heaven-ai"]');
+        links.forEach((el) => { el.textContent = map.enter; });
+        localStorage.setItem('heaven_lang', lang);
+      }
 
-    // pick handling
-    const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
-    renderer.domElement.addEventListener('pointerdown', (ev)=>{
-      const rect = renderer.domElement.getBoundingClientRect(); mouse.x = ((ev.clientX-rect.left)/rect.width)*2 -1; mouse.y = -((ev.clientY-rect.top)/rect.height)*2 +1; ray.setFromCamera(mouse, camera);
-      const hits = ray.intersectObjects(agentObjs.concat(sculpture));
-      if(hits.length){ const h = hits[0].object; if(h===sculpture){ logEvent('Sculpture inspected'); } else { inspectAgent(h.userData); spawnPulse(center, h.position, h.material.color.getHex()); logEvent((document.documentElement.getAttribute('lang')==='ar'?h.userData.name.ar:h.userData.name.en)+ ' selected'); }
-    }
-    });
+      const currentLang = localStorage.getItem('heaven_lang') || 'ar';
+      applyLanguage(currentLang);
 
-    // simulation engine (deterministic script)
-    const events = document.getElementById('eventLog'); let simRunning=false; let simStepIndex=0;
-    const script = [
-      {id:'start',msg:{ar:'استلام الطلب — استلم Intake Agent طلباً وهمياً',en:'Request received — Intake Agent structured a request'}},
-      {id:'discover',msg:{ar:'اكتشاف الموارد — Discovery Agent اقترح موارد محتملة',en:'Discovery found potential resources'}},
-      {id:'match',msg:{ar:'مطابقة — Matching Agent رتب المرشحين حسب الصلاحية',en:'Matching ranked candidates'}},
-      {id:'review',msg:{ar:'مراجعة بشرية — Human review requested',en:'Human review required'}},
-      {id:'referral',msg:{ar:'إحالة — Coordination Agent أرسل إحالة مقترحة',en:'Referral proposed to provider'}},
-      {id:'follow',msg:{ar:'متابعة — Follow-up started',en:'Follow-up tracking started'}},
-      {id:'confirmed',msg:{ar:'تم التأكيد — Outcome confirmed with evidence',en:'Outcome confirmed'}},
-    ];
-    function logEvent(txt){ const d = document.createElement('div'); d.textContent = txt; events.appendChild(d); events.scrollTop = events.scrollHeight; }
-    function stepSim(){ if(simStepIndex>=script.length) return; const s = script[simStepIndex]; simStepIndex++; logEvent(document.documentElement.getAttribute('lang')==='ar'?s.msg.ar:s.msg.en); // spawn a pulse to a random agent
-      const agent = agentObjs[Math.max(0,Math.min(agentObjs.length-1,simStepIndex-2))]; if(agent){ spawnPulse(center, agent.position, agent.material.color.getHex()); }
-      // update metrics
-      document.getElementById('mNeeds').textContent = 1; document.getElementById('mMatches').textContent = Math.max(0,simStepIndex-1); document.getElementById('mReviews').textContent = (simStepIndex>3?1:0); document.getElementById('mConfirmed').textContent = (s.id==='confirmed'?1:0);
-    }
-    document.getElementById('simStart').addEventListener('click', ()=>{ if(simRunning) return; simRunning = true; window._simInterval = setInterval(()=>{ stepSim(); if(simStepIndex>=script.length){ clearInterval(window._simInterval); simRunning=false; } },1400); });
-    document.getElementById('simPause').addEventListener('click', ()=>{ simRunning=false; clearInterval(window._simInterval); });
-    document.getElementById('simStep').addEventListener('click', ()=> stepSim());
-    document.getElementById('simReset').addEventListener('click', ()=>{ simRunning=false; clearInterval(window._simInterval); simStepIndex=0; events.innerHTML=''; document.getElementById('mNeeds').textContent='—'; document.getElementById('mMatches').textContent='—'; document.getElementById('mReviews').textContent='—'; document.getElementById('mConfirmed').textContent='—'; });
+      langBtn.addEventListener('click', () => {
+        const next = document.documentElement.lang === 'ar' ? 'en' : 'ar';
+        applyLanguage(next);
+      });
+    })();
 
-    // agent list UI
-    const agentsList = document.getElementById('agentsList'); AGENTS.forEach((a,i)=>{ const row = document.createElement('div'); row.className='agentRow'; const sw = document.createElement('div'); sw.className='agentSwatch'; sw.style.background = '#' + a.color.toString(16).padStart(6,'0'); const label = document.createElement('div'); label.innerHTML = '<strong>' + (document.documentElement.getAttribute('lang')==='ar'?a.name.ar:a.name.en) + '</strong><div class="small">' + (['Intake','Verify','Discover','Match','Coord','Follow'][i]) + '</div>'; row.appendChild(sw); row.appendChild(label); row.addEventListener('click', ()=>{ // focus camera on agent
-        const obj = agentObjs[i]; camera.position.set(obj.position.x*0.9, obj.position.y*0.85, 220); logEvent((document.documentElement.getAttribute('lang')==='ar'?a.name.ar:a.name.en)+' '+(document.documentElement.getAttribute('lang')==='ar'?'مفحوص':'inspected')); spawnPulse(center, obj.position, a.color);
-    }); agentsList.appendChild(row); });
+    (() => {
+      const canvas = document.getElementById('coreCanvas');
+      const ctx = canvas.getContext('2d');
+      const agentList = document.getElementById('agentList');
+      const eventLog = document.getElementById('eventLog');
 
-    // language toggle
-    const langBtn = document.getElementById('langBtn'); function applyLang(l){ if(l==='ar'){ document.documentElement.setAttribute('lang','ar'); document.documentElement.setAttribute('dir','rtl'); langBtn.textContent='English'; document.getElementById('enterLink').textContent='دخول إلى HEAVEN'; } else { document.documentElement.setAttribute('lang','en'); document.documentElement.setAttribute('dir','ltr'); langBtn.textContent='العربية'; document.getElementById('enterLink').textContent='Enter HEAVEN'; } }
-    const stored = localStorage.getItem('heaven_lang')||'ar'; applyLang(stored);
-    langBtn.addEventListener('click', ()=>{ const cur = document.documentElement.getAttribute('lang'); const next = cur==='ar'?'en':'ar'; applyLang(next); localStorage.setItem('heaven_lang', next); });
+      const agents = [
+        { name: 'Intake Agent', role: 'Structuring incoming requests and extracting essentials', color: '#7fd4e8' },
+        { name: 'Verification Agent', role: 'Checking completeness and relevance before routing', color: '#b48cff' },
+        { name: 'Discovery Agent', role: 'Searching the resource map and identifying suitable matches', color: '#3f8cff' },
+        { name: 'Matching Agent', role: 'Ranking likely options based on explicit constraints', color: '#53e0c8' },
+        { name: 'Coordination Agent', role: 'Preparing and routing referrals through the right path', color: '#f5c86e' },
+        { name: 'Follow-up Agent', role: 'Tracking outcome confirmation and unresolved cases', color: '#6fe2a5' }
+      ];
 
-    // demo modal quick open mapping to simStart
-    document.getElementById('demoOpen').addEventListener('click', ()=>{ document.getElementById('simStart').click(); });
+      agents.forEach((agent) => {
+        const item = document.createElement('div');
+        item.className = 'agent-item';
+        item.innerHTML = `
+          <div class="agent-swatch" style="background:${agent.color}"></div>
+          <div class="agent-meta">
+            <div class="agent-name">${agent.name}</div>
+            <div class="agent-role">${agent.role}</div>
+          </div>
+        `;
+        item.addEventListener('click', () => {
+          logEvent('Selected ' + agent.name + ' — active role is visible in the coordination flow.');
+        });
+        agentList.appendChild(item);
+      });
 
-    // Qutmir glyph: simple canvas-based accent badge drawn top-left on HUD (we'll use DOM for now)
-    // The official logo is preserved; Qutmir identity is implied via accent colors applied to agents and confirmed pulses.
+      function logEvent(message) {
+        const row = document.createElement('div');
+        row.className = 'log-item';
+        row.textContent = message;
+        eventLog.prepend(row);
+        while (eventLog.children.length > 8) eventLog.lastChild.remove();
+      }
 
-  })();
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(rect.width * ratio);
+        canvas.height = Math.floor(rect.height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      }
+
+      const ORBITS = [
+        { x: 0.18, y: 0.26, r: 118, color: '#7fd4e8' },
+        { x: 0.82, y: 0.28, r: 116, color: '#ff9a3c' },
+        { x: 0.2, y: 0.72, r: 112, color: '#3f8cff' },
+        { x: 0.83, y: 0.72, r: 110, color: '#a98cff' },
+        { x: 0.5, y: 0.18, r: 100, color: '#53e0c8' },
+        { x: 0.5, y: 0.82, r: 98, color: '#6fe2a5' }
+      ];
+
+      let t = 0;
+      function drawBackground(time) {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        ctx.clearRect(0, 0, w, h);
+
+        const gradient = ctx.createRadialGradient(w * 0.5, h * 0.5, 40, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
+        gradient.addColorStop(0, 'rgba(127,212,232,0.10)');
+        gradient.addColorStop(0.5, 'rgba(127,212,232,0.03)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+
+        // soft stars
+        for (let i = 0; i < 60; i++) {
+          const x = (i * 67.7 + (time * 0.03)) % w;
+          const y = ((i * 31.3) % h);
+          const alpha = 0.18 + ((i % 9) / 12);
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fillRect(x, y, 1.4, 1.4);
+        }
+      }
+
+      function drawCore(time) {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        const cx = w * 0.5;
+        const cy = h * 0.52;
+
+        // network connections
+        ctx.lineWidth = 1.3;
+        for (let i = 0; i < ORBITS.length; i++) {
+          const a = ORBITS[i];
+          const x = cx + Math.cos(time * 0.5 + i) * 140;
+          const y = cy + Math.sin(time * 0.6 + i) * 110;
+          const px = cx + (a.x - 0.5)*w*0.62 + Math.cos(time * 0.8 + i) * a.r * 0.55;
+          const py = cy + (a.y - 0.5)*h*0.62 + Math.sin(time * 0.6 + i*1.2) * a.r * 0.5;
+          ctx.strokeStyle = 'rgba(127,212,232,0.18)';
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(px, py);
+          ctx.stroke();
+        }
+
+        // central sculpture
+        const pulse = 1 + Math.sin(time * 0.8) * 0.06;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(time * 0.12);
+
+        // glow
+        const glow = ctx.createRadialGradient(0, 0, 20, 0, 0, 190 * pulse);
+        glow.addColorStop(0, 'rgba(255,255,255,0.85)');
+        glow.addColorStop(0.18, 'rgba(127,212,232,0.4)');
+        glow.addColorStop(0.45, 'rgba(81,140,255,0.18)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(0, 0, 190, 0, Math.PI * 2); ctx.fill();
+
+        // sculpt body: use a rounded, layered symmetrical shape
+        ctx.strokeStyle = 'rgba(127,212,232,0.7)';
+        ctx.lineWidth = 1.3;
+        ctx.fillStyle = 'rgba(18, 35, 58, 0.52)';
+        for (let i = 0; i < 3; i++) {
+          const s = 1 + i * 0.18 + Math.sin(time * 0.8 + i) * 0.03;
+          ctx.beginPath();
+          ctx.moveTo(-80 * s, 0);
+          ctx.bezierCurveTo(-90 * s, -120 * s, 90 * s, -120 * s, 80 * s, 0);
+          ctx.bezierCurveTo(80 * s, 90 * s, 0, 120 * s, -80 * s, 0);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fill();
+        }
+
+        // central lumen
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.arc(0, 0, 54 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // gateway accent
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(245,200,110,0.8)';
+        ctx.ellipse(0, 0, 58, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // orbiting nodes
+        ORBITS.forEach((orb, index) => {
+          const x = cx + Math.cos(time * 0.5 + index) * 150 + (orb.x - 0.5) * 240;
+          const y = cy + Math.sin(time * 0.6 + index) * 110 + (orb.y - 0.5) * 180;
+          ctx.beginPath();
+          ctx.fillStyle = orb.color;
+          ctx.shadowColor = orb.color;
+          ctx.shadowBlur = 12;
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+
+        // moving particles along network arcs
+        for (let i = 0; i < 18; i++) {
+          const px = cx + Math.cos(time * 0.8 + i * 0.8) * (70 + i * 4);
+          const py = cy + Math.sin(time * 0.9 + i * 1.3) * (30 + i * 2);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(127,212,232,0.9)' : 'rgba(245,200,110,0.7)';
+          ctx.fillRect(px, py, 4, 4);
+        }
+      }
+
+      function render(time) {
+        resizeCanvas();
+        drawBackground(time * 0.001);
+        drawCore(time * 0.001);
+        requestAnimationFrame(render);
+      }
+
+      requestAnimationFrame(render);
+      logEvent('HEAVEN simulation initialized — fictional workflow is active.');
+      logEvent('Need intake receives a request and begins structuring the context.');
+      logEvent('Agent network is coordinating potential matches and review states.');
+    })();
   </script>
 </body>
 </html>
