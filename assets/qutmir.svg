@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="qutmir-gradient" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#3f8cff" />
+      <stop offset="55%" stop-color="#7fd4e8" />
+      <stop offset="100%" stop-color="#ff9a3c" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="160" height="160" rx="22" fill="#041123" />
+  <g filter="url(#glow)">
+    <path d="M40 44 C60 20, 100 20, 120 44 L120 92 C100 116, 60 116, 40 92 Z" fill="url(#qutmir-gradient)" opacity="0.98" />
+    <path d="M50 74 L110 74" stroke="#ffffff" stroke-opacity="0.08" stroke-width="6" stroke-linecap="round" />
+    <circle cx="80" cy="72" r="18" fill="#ffffff" fill-opacity="0.04" />
+    <circle cx="80" cy="72" r="10" fill="url(#qutmir-gradient)" />
+  </g>
+  <g transform="translate(18,108)">
+    <rect x="0" y="0" width="124" height="10" rx="5" fill="#ffffff" fill-opacity="0.02" />
+  </g>
+</svg>
