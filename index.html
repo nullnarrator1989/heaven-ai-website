@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="HEAVEN — interactive multi-agent humanitarian coordination simulation. Fictional data.">
+<meta name="theme-color" content="#070b16">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HEAVEN Sim">
+<title>HEAVEN — Multi-Agent Coordination Simulation</title>
+<style>:root {
+  --bg: #070b16;
+  --bg2: #0b1122;
+  --ink: #eef1ff;
+  --dim: #9aa6c4;
+  --faint: #626d8c;
+  --cyan: #7fd4e8;
+  --blue: #3f8cff;
+  --teal: #53e0c8;
+  --violet: #b48cff;
+  --gold: #f5c86e;
+  --amber: #ff9a3c;
+  --green: #4ade80;
+  --red: #f87171;
+  --line: rgba(127, 212, 232, 0.15);
+  --line2: rgba(127, 212, 232, 0.32);
+  --card: rgba(13, 20, 40, 0.85);
+  --radius: 12px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+  font-size: 16px;
+}
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+h2 { font-size: 0.95rem; margin: 0 0 8px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); }
+h2 .sub { display: block; font-size: 0.72rem; color: var(--dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.muted { color: var(--dim); font-size: 0.82rem; }
+
+/* header */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(7, 11, 22, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-weight: 800; letter-spacing: 0.22em; font-size: 0.9rem; }
+.brand small { display: block; letter-spacing: 0.06em; font-weight: 400; color: var(--dim); font-size: 0.68rem; }
+.badge-fiction {
+  font-size: 0.62rem; letter-spacing: 0.08em; color: var(--amber);
+  border: 1px solid rgba(255, 154, 60, 0.45); border-radius: 999px;
+  padding: 4px 12px; white-space: nowrap; font-family: var(--mono);
+}
+.top-actions { display: flex; gap: 8px; margin-inline-start: auto; }
+
+/* layout */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 14px 12px 90px; }
+.scen-row { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; }
+.scen {
+  flex: 1 0 auto; min-width: 150px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; cursor: pointer;
+  min-height: 56px; text-align: start;
+}
+.scen small { display: block; color: var(--dim); font-size: 0.7rem; }
+.scen[aria-pressed="true"] { border-color: var(--cyan); background: rgba(63, 140, 255, 0.12); }
+.grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.panel {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px 14px;
+  min-width: 0;
+}
+.kv { display: grid; grid-template-columns: 118px 1fr; gap: 4px 10px; font-size: 0.83rem; margin: 8px 0 0; }
+.kv dt { color: var(--dim); }
+.kv dd { margin: 0; font-family: var(--mono); font-size: 0.78rem; }
+.pill {
+  display: inline-block; font-size: 0.7rem; letter-spacing: 0.06em; font-family: var(--mono);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; color: var(--dim);
+}
+.pill.p-run { border-color: var(--cyan); color: var(--cyan); }
+.pill.p-warn { border-color: var(--amber); color: var(--amber); }
+.pill.p-ok { border-color: var(--green); color: var(--green); }
+.pill.p-bad { border-color: var(--red); color: var(--red); }
+.pill.p-idle { border-color: var(--faint); color: var(--dim); }
+
+/* canvas */
+.canvas-wrap { position: relative; }
+#simCanvas {
+  display: block; width: 100%; height: 460px;
+  background: radial-gradient(120% 90% at 50% 0%, #0b1330 0%, #070b16 60%);
+  border: 1px solid var(--line); border-radius: 10px;
+  touch-action: manipulation; cursor: pointer;
+}
+.transport { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.status-line { font-family: var(--mono); font-size: 0.72rem; color: var(--dim); margin-top: 8px; min-height: 1.2em; }
+
+/* buttons */
+.btn {
+  padding: 11px 18px; border-radius: 10px; border: 1px solid var(--line);
+  background: rgba(24, 34, 66, 0.7); color: var(--ink);
+  font-size: 0.88rem; cursor: pointer; min-height: 48px;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn.primary { background: linear-gradient(135deg, var(--blue), #22b8d4); border: 0; font-weight: 700; }
+.btn.green { border-color: rgba(74, 222, 128, 0.55); color: var(--green); }
+.btn.amber { border-color: rgba(255, 154, 60, 0.55); color: var(--amber); }
+.btn.red { border-color: rgba(248, 113, 113, 0.55); color: var(--red); }
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 40px; padding: 7px 14px; font-size: 0.8rem; }
+
+/* history + gates */
+.hist-log {
+  max-height: 260px; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 6px; padding-inline-end: 2px; margin-top: 6px;
+}
+.hrow { display: flex; gap: 8px; align-items: baseline; font-size: 0.78rem; border-bottom: 1px dashed rgba(127,212,232,0.08); padding-bottom: 5px; }
+.htag { font-family: var(--mono); font-size: 0.62rem; border: 1px solid; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.htext { color: var(--ink); }
+.gate-box { border: 1px solid rgba(255, 154, 60, 0.4); border-radius: 10px; padding: 12px; background: rgba(255, 154, 60, 0.05); margin-top: 6px; }
+.gate-box.flash { animation: gateflash 0.9s ease; }
+@keyframes gateflash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 3px rgba(255, 154, 60, 0.5); } }
+.gateTitle { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; color: var(--amber); margin: 0 0 4px; }
+.btnRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.btnRow .btn { flex: 1 1 30%; }
+
+/* stage */
+.stage-bar { height: 8px; border-radius: 999px; background: rgba(127, 212, 232, 0.12); overflow: hidden; margin: 8px 0; }
+.stage-bar > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width 0.4s ease; }
+.stage-name { font-family: var(--mono); font-size: 0.8rem; color: var(--cyan); }
+.stage-agent { font-size: 0.8rem; color: var(--dim); }
+
+/* roster */
+.roster { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.rosterBtn {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(24, 34, 66, 0.6); border: 1px solid var(--line); color: var(--ink);
+  border-radius: 999px; padding: 9px 16px; font-size: 0.82rem; cursor: pointer; min-height: 44px;
+}
+.rosterBtn .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/* inspector */
+.inspector {
+  position: fixed; top: 0; inset-inline-end: 0; height: 100vh;
+  width: min(380px, 94vw); z-index: 80;
+  background: #0b1122; border-inline-start: 1px solid var(--line2);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+  transform: translateX(105%);
+  transition: transform 0.28s ease;
+  padding: 18px 16px 40px; overflow-y: auto;
+}
+[dir="rtl"] .inspector { transform: translateX(-105%); }
+.inspector.open { transform: translateX(0); }
+.insp-head { display: flex; align-items: center; gap: 8px; }
+.insp-head h3 { flex: 1; margin: 0; font-size: 1.05rem; }
+.insp-state { font-family: var(--mono); font-size: 0.75rem; color: var(--cyan); margin: 6px 0 2px; }
+.insp-task { font-size: 0.85rem; color: var(--ink); margin: 0 0 8px; }
+.insp-sec { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; color: var(--faint); margin: 12px 0 4px; }
+.insp-role, .insp-logic { font-size: 0.84rem; color: var(--dim); margin: 0; }
+.iorow { display: grid; grid-template-columns: 110px 1fr; gap: 8px; font-size: 0.78rem; padding: 5px 0; border-bottom: 1px dashed rgba(127,212,232,0.1); }
+.iok { font-family: var(--mono); color: var(--faint); font-size: 0.68rem; }
+.iov { color: var(--ink); }
+.lrow { font-family: var(--mono); font-size: 0.7rem; color: var(--dim); padding: 4px 0; border-bottom: 1px dashed rgba(127,212,232,0.08); }
+
+/* watermark + footer */
+.watermark {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 70;
+  text-align: center; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em;
+  color: var(--amber); background: rgba(7, 11, 22, 0.92);
+  border-top: 1px solid rgba(255, 154, 60, 0.35);
+  padding: 7px 8px; pointer-events: none;
+}
+.footer { text-align: center; color: var(--faint); font-size: 0.72rem; margin-top: 16px; }
+
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: 300px 1fr 340px; align-items: start; }
+  #simCanvas { height: 560px; }
+  .hist-log { max-height: 320px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate-box.flash { animation: none; }
+  .inspector { transition: none; }
+}
+
+/* ---- native-app mobile behavior ---- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  font-family: inherit;
+}
+.topbar {
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
+}
+.wrap {
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+}
+.scen-row {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.scen-row::-webkit-scrollbar { display: none; }
+.scen { scroll-snap-align: start; }
+.hist-log, .inspector { overscroll-behavior: contain; }
+.inspector {
+  height: 100dvh;
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+}
+.watermark {
+  padding-bottom: max(7px, env(safe-area-inset-bottom));
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.btn.small { min-height: 44px; }
+@media (max-width: 1023px) {
+  #simCanvas { height: 400px; }
+}
+@media (max-width: 1023px) {
+  /* topology first on phones: hero + Start visible without scrolling */
+  #netPanel { order: -1; }
+  .topbar { gap: 8px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .brand { font-size: 0.8rem; letter-spacing: 0.16em; }
+  .badge-fiction { font-size: 0.56rem; }
+}
+@media (max-width: 380px) {
+  body { font-size: 15px; }
+  .kv { grid-template-columns: 96px 1fr; }
+  .btnRow .btn { flex-basis: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">HEAVEN<small>multi-agent coordination sim</small></div>
+  <span class="badge-fiction">FICTIONAL DATA · MOCK BACKEND</span>
+  <div class="top-actions">
+    <button class="btn small ghost" id="qualityBtn" type="button">Quality: High</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="scen-row" id="scenRow" role="group" aria-label="Scenarios"></div>
+
+  <div class="grid" id="simGrid">
+    <section class="panel" id="casePanel" aria-label="Case status">
+      <h2>Active Case Status<span class="sub">Household Food Assistance · Riyadh</span></h2>
+      <span class="pill p-idle" id="casePill">STANDBY</span>
+      <dl class="kv">
+        <dt>Need</dt><dd>temporary food · 1 week</dd>
+        <dt>Constraints</dt><dd>daily · ≤10 km · Arabic · no ID</dd>
+        <dt>Stage</dt><dd id="kvStage">—</dd>
+        <dt>Active agent</dt><dd id="kvAgent">—</dd>
+        <dt>Referral</dt><dd id="kvRef">—</dd>
+        <dt>Outcome</dt><dd id="kvOutcome">—</dd>
+      </dl>
+      <h2 style="margin-top:14px">Current Workflow Stage</h2>
+      <div class="stage-name" id="stageName">Standby — no case running</div>
+      <div class="stage-bar"><div id="stageBarFill"></div></div>
+      <div class="stage-agent" id="stageAgent">No active agent</div>
+    </section>
+
+    <section class="panel" id="netPanel" aria-label="Network topology">
+      <h2>Network Topology<span class="sub">click any node to inspect the agent</span></h2>
+      <div class="canvas-wrap">
+        <canvas id="simCanvas"></canvas>
+      </div>
+      <div class="transport">
+        <button class="btn primary" id="startBtn" type="button">Start Simulation</button>
+        <button class="btn" id="stepBtn" type="button">Step</button>
+        <button class="btn" id="autoBtn" type="button">Auto</button>
+      </div>
+      <div class="status-line" id="statusLine">simulator idle · all data fictional</div>
+    </section>
+
+    <section class="panel" id="opsPanel" aria-label="Operations">
+      <h2>Agent Action History<span class="sub">live event stream</span></h2>
+      <div class="hist-log" id="histLog"></div>
+      <h2 style="margin-top:14px">Pending Decision Gates</h2>
+      <div class="gate-box" id="gateBox"><p class="muted">No pending gates.</p></div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:12px" aria-label="Agents">
+    <h2>Agents<span class="sub">touch-friendly inspector shortcuts</span></h2>
+    <div class="roster" id="agentRoster"></div>
+  </section>
+
+  <p class="footer">HEAVEN interactive simulation · fictional household, fictional directory · no real people · runs fully client-side</p>
+</main>
+
+<aside class="inspector" id="inspector" aria-label="Operational inspection panel">
+  <div class="insp-head">
+    <h3 id="inspectTitle">Inspector</h3>
+    <button class="btn small ghost" id="inspectClose" type="button">Close</button>
+  </div>
+  <div class="insp-state" id="inspectState"></div>
+  <p class="insp-task" id="inspectTask"></p>
+  <div class="insp-sec">ROLE</div>
+  <p class="insp-role" id="inspectRole"></p>
+  <div class="insp-sec">DECISION LOGIC</div>
+  <p class="insp-logic" id="inspectLogic"></p>
+  <div class="insp-sec">INPUTS / OUTPUTS</div>
+  <div id="inspectIO"></div>
+  <div class="insp-sec">AGENT LOG</div>
+  <div id="inspectLogs"></div>
+</aside>
+
+<div class="watermark">HEAVEN INTERACTIVE SIMULATION · FICTIONAL DATA</div>
+
+<script>/* HEAVEN simulation engine — deterministic client-side state machine.
+   Fictional mock data only. No network calls. No randomness outside a seeded
+   display-order tiebreak. Exposes window.HeavenSim. */
+(function () {
+  "use strict";
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  var AGENTS = [
+    { id: "intake", name: "Intake", color: "#7fd4e8",
+      role: "Receives the household message and structures the request.",
+      logic: "Extract need, city, language and duration. Flag gaps instead of guessing." },
+    { id: "verify", name: "Verification", color: "#b48cff",
+      role: "Checks context completeness and minimizes extra data.",
+      logic: "Require city and duration. Halt on gaps and request clarification." },
+    { id: "discover", name: "Discovery", color: "#3f8cff",
+      role: "Searches the fictional directory and screens candidates.",
+      logic: "Apply explicit criteria to all four resources. Never invent a resource." },
+    { id: "match", name: "Matching", color: "#53e0c8",
+      role: "Compares viable candidates on explicit criteria.",
+      logic: "Rank by daily availability, distance, language, ID rule and capacity." },
+    { id: "coord", name: "Coordination", color: "#f5c86e",
+      role: "Prepares the proposed referral and tracks it end to end.",
+      logic: "Check duplicates, prepare the referral pack, notify the family, track follow-up. Never auto-refers without recorded human approval." },
+    { id: "human", name: "Human Oversight", color: "#ff9a3c",
+      role: "Pauses the workflow until a human decides.",
+      logic: "Approve, decline, or request clarification. Every decision is recorded with a reason." },
+    { id: "follow", name: "Follow-up", color: "#4ade80",
+      role: "Tracks the referral and records evidence-based outcomes.",
+      logic: "Confirm receipt only with evidence. Otherwise record awaiting or unresolved honestly." }
+  ];
+
+  var RESOURCES = [
+    { id: "kitchen", name: "Community Kitchen — Riyadh",
+      attrs: { daily: true, distKm: 6, lang: "ar", needsId: false, slots: 14, days: "daily" } },
+    { id: "van", name: "Food Bank Van",
+      attrs: { daily: false, distKm: 12, lang: "ar", needsId: false, slots: 8, days: "tue-thu" } },
+    { id: "voucher", name: "Grocery Voucher Pilot",
+      attrs: { daily: true, distKm: 4, lang: "en", needsId: true, slots: 2, days: "daily" } },
+    { id: "pantry", name: "North District Pantry",
+      attrs: { daily: false, distKm: 18, lang: "ar", needsId: true, slots: 5, days: "weekly" } }
+  ];
+
+  var NEED = { category: "food-temp", city: "Riyadh", lang: "ar", needsDaily: true,
+    hasId: false, maxDistKm: 10, duration: "1 week", priority: "gentle-urgent" };
+
+  function evalCriteria(res) {
+    var a = res.attrs, out = [];
+    out.push({ key: "daily", pass: !NEED.needsDaily || a.daily,
+      label: "daily availability" });
+    out.push({ key: "dist", pass: a.distKm <= NEED.maxDistKm,
+      label: "distance " + a.distKm + " km (limit " + NEED.maxDistKm + ")" });
+    out.push({ key: "lang", pass: a.lang === NEED.lang,
+      label: "language: " + (a.lang === "ar" ? "Arabic" : "English") });
+    out.push({ key: "id", pass: !a.needsId || NEED.hasId,
+      label: a.needsId ? "ID required (not available)" : "no ID required" });
+    out.push({ key: "slots", pass: a.slots > 0,
+      label: "capacity: " + a.slots });
+    var fails = out.filter(function (c) { return !c.pass; }).length;
+    return { criteria: out, viable: fails === 0, fails: fails };
+  }
+
+  function resById(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function createSim(seed) {
+    var rng = mulberry32(seed == null ? 20261013 : seed);
+    var listeners = [];
+    var RES = RESOURCES.map(function (r) {
+      return { id: r.id, name: r.name, attrs: Object.assign({}, r.attrs) };
+    });
+    var S = {
+      seed: seed, tick: 0, seq: 0,
+      phase: "idle",
+      caseOpen: false,
+      structured: null, gaps: [],
+      searchResults: [],
+      shortlist: [],
+      proposed: null,
+      reviewDecision: null,
+      familyAccepted: null,
+      outcome: null,
+      outcomeNote: null,
+      escalated: false,
+      agents: {},
+      tasks: [],
+      exceptions: []
+    };
+    AGENTS.forEach(function (a) { S.agents[a.id] = { state: "idle", task: "—" }; });
+
+    function emit(kind, agentId, text, data) {
+      S.seq++; S.tick++;
+      var e = { seq: S.seq, tick: S.tick, kind: kind, agent: agentId, text: text, data: data || null };
+      listeners.forEach(function (f) { try { f(e); } catch (_) {} });
+      return e;
+    }
+    function setAgent(id, state, task) {
+      S.agents[id] = { state: state, task: task || S.agents[id].task };
+      emit("agent", id, AGENTS.filter(function (a) { return a.id === id; })[0].name + " → " + state + (task ? " — " + task : ""), { state: state });
+    }
+    function control(to, text) {
+      emit("control", "orch", "Orchestrator → " + to + ": " + text, { from: "orch", to: to });
+    }
+    function handoff(from, to, text) {
+      emit("handoff", from, text, { from: from, to: to });
+    }
+    function queueTask(id, owner, label) {
+      S.tasks.push({ id: id, owner: owner, label: label, state: "queued" });
+      emit("task", owner, "task queued: " + label, { task: id, state: "queued" });
+    }
+    function runTask(id, st) {
+      var t = null;
+      for (var i = 0; i < S.tasks.length; i++) if (S.tasks[i].id === id) t = S.tasks[i];
+      if (t) { t.state = st; emit("task", t.owner, "task " + t.label + ": " + st, { task: id, state: st }); }
+    }
+    function need(cond, err) {
+      if (!cond) return { error: err };
+      return null;
+    }
+
+    var api = {
+      on: function (f) { listeners.push(f); return api; },
+      snapshot: function () { return JSON.parse(JSON.stringify(S)); },
+
+      annotate: function (agentId, text) {
+        emit("note", agentId, text, null);
+        return { ok: true };
+      },
+
+      startCase: function (mode) {
+        var bad = need(S.phase === "idle", "cannot start now");
+        if (bad) return bad;
+        S.phase = "intake"; S.caseOpen = true;
+        control("intake", "new case assigned");
+        setAgent("intake", "working", "receiving the family message, extracting details");
+        emit("case", "intake", "new request: Riyadh household needs temporary food assistance", { mode: mode });
+        queueTask("structure", "intake", "structure request");
+        if (mode === "incomplete") {
+          S.gaps = ["city", "duration"];
+          S.phase = "clarify";
+          runTask("structure", "needs-info");
+          setAgent("intake", "done", "initial intake done");
+          setAgent("verify", "working", "found gaps: city and duration");
+          handoff("intake", "verify", "request to verification");
+          emit("clarify", "verify", "missing info (city, duration) — returned for clarification instead of guessing", { gaps: S.gaps.slice() });
+        } else {
+          S.structured = Object.assign({}, NEED);
+          S.phase = "verify";
+          runTask("structure", "done");
+          setAgent("intake", "done", "structuring complete");
+          handoff("intake", "verify", "structured request to verification");
+          emit("structured", "verify", "structured: temp food · Riyadh · Arabic · 1 week", {});
+        }
+        return { ok: true };
+      },
+
+      completeDetails: function () {
+        var bad = need(S.phase === "clarify", "no pending clarification");
+        if (bad) return bad;
+        S.gaps = []; S.structured = Object.assign({}, NEED); S.phase = "verify";
+        setAgent("verify", "working", "details complete — verifying");
+        emit("structured", "verify", "details complete: Riyadh · one week", {});
+        return { ok: true };
+      },
+
+      runDiscovery: function () {
+        var bad = need(S.phase === "verify", "discovery runs after verification");
+        if (bad) return bad;
+        S.phase = "discover";
+        setAgent("verify", "done", "verification complete (data minimized)");
+        setAgent("discover", "working", "searching directory, evaluating candidates");
+        queueTask("search", "discover", "directory search");
+        control("discover", "directory scan authorized");
+        handoff("verify", "discover", "verified request to discovery");
+        var order = RES.map(function (r) { return r.id; });
+        void rng;
+        S.searchResults = order.map(function (id) {
+          var r = resById(RES, id);
+          var ev = evalCriteria(r);
+          return { resId: id, viable: ev.viable, fails: ev.fails, criteria: ev.criteria };
+        });
+        S.searchResults.forEach(function (sr) {
+          var r = resById(RESOURCES, sr.resId);
+          emit("search", "discover",
+            "checked " + r.name + ": " + (sr.viable ? "viable" : "rejected (" + sr.fails + " criteria)"),
+            { res: sr.resId, viable: sr.viable, criteria: sr.criteria });
+        });
+        runTask("search", "done");
+        setAgent("discover", "done", "screening complete");
+        S.shortlist = S.searchResults.filter(function (s) { return s.viable; }).map(function (s) { return s.resId; });
+        S.phase = "match";
+        setAgent("match", "working", "comparing candidates on explicit criteria");
+        handoff("discover", "match", "screening results to matching");
+        emit("match", "match",
+          "shortlist: " + (S.shortlist.length ? S.shortlist.map(function (id) { return resById(RES, id).name; }).join(", ") : "none"),
+          { shortlist: S.shortlist.slice() });
+        return { ok: true, shortlist: S.shortlist.slice() };
+      },
+
+      propose: function (resId) {
+        var bad = need(S.phase === "match" && S.shortlist.indexOf(resId) >= 0, "not a valid candidate");
+        if (bad) return bad;
+        S.proposed = resId; S.phase = "coordinate";
+        var r = resById(RES, resId);
+        setAgent("match", "done", "reasoned comparison complete");
+        setAgent("coord", "working", "preparing proposed referral, checking duplicates");
+        queueTask("referral", "coord", "prepare referral");
+        control("coord", "referral pack requested");
+        handoff("match", "coord", "chosen candidate to coordination");
+        emit("propose", "coord", "proposed referral: " + r.name + " (duplicates: none found)", { res: resId });
+        S.phase = "review";
+        runTask("referral", "waiting");
+        setAgent("coord", "done", "referral ready for review");
+        setAgent("human", "waiting", "human decision required — not automatic");
+        queueTask("decision", "human", "review decision");
+        handoff("coord", "human", "referral to human gateway");
+        emit("review", "human", "referral paused at gateway: approve? decline? clarify?", { res: resId });
+        return { ok: true };
+      },
+
+      declareNoFit: function () {
+        var bad = need(S.phase === "match", "no evaluation on screen");
+        if (bad) return bad;
+        S.phase = "outcome"; S.outcome = "no-match";
+        S.outcomeNote = "No resource meets the stated requirements";
+        setAgent("match", "done", "no-match recorded honestly");
+        emit("nomatch", "match", "no suitable match — recorded instead of inventing one", {});
+        return { ok: true };
+      },
+
+      retrySearch: function () {
+        var bad = need(S.phase === "outcome" && S.outcome === "no-match", "retry only after no-match");
+        if (bad) return bad;
+        S.outcome = null; S.phase = "verify";
+        emit("retry", "discover", "searching directory again (same criteria)", {});
+        return { ok: true };
+      },
+
+      escalate: function () {
+        var bad = need(S.phase === "outcome" && S.outcome === "no-match", "escalate only after no-match");
+        if (bad) return bad;
+        S.outcome = "escalated"; S.escalated = true;
+        S.exceptions.push({ kind: "no-match-escalated", text: "no-match case awaiting human coordinator" });
+        emit("exception", "coord", "case escalated to human coordinator — stays visible as outstanding", {});
+        return { ok: true };
+      },
+
+      reviewDecision: function (d) {
+        var bad = need(S.phase === "review" && (d === "approve" || d === "decline" || d === "clarify"), "no pending decision");
+        if (bad) return bad;
+        S.reviewDecision = d;
+        if (d === "approve") {
+          S.phase = "family";
+          runTask("decision", "done");
+          setAgent("human", "done", "approval recorded with reason");
+          setAgent("coord", "working", "notifying family — decision is theirs");
+          handoff("human", "coord", "approval to coordination");
+          emit("approved", "human", "gateway approved referral — offered to family", { res: S.proposed });
+        } else if (d === "decline") {
+          S.phase = "outcome"; S.outcome = "declined";
+          S.outcomeNote = "Gateway declined the proposed referral";
+          runTask("decision", "done");
+          setAgent("human", "done", "rejection recorded with reason");
+          emit("gateway-decline", "human", "gateway declined referral — closed without referral", {});
+        } else {
+          S.phase = "match";
+          runTask("decision", "needs-info");
+          setAgent("human", "working", "requested clarification — back to matching");
+          handoff("human", "match", "clarification request to matching");
+          emit("gateway-clarify", "human", "gateway requested changes — case returned to matching", {});
+        }
+        return { ok: true };
+      },
+
+      familySay: function (accept) {
+        var bad = need(S.phase === "family", "no referral on screen");
+        if (bad) return bad;
+        S.familyAccepted = !!accept;
+        if (!accept) {
+          S.phase = "outcome"; S.outcome = "declined"; S.outcomeNote = "Family declined the referral — their right";
+          setAgent("coord", "done", "family decline recorded");
+          emit("family-decline", "coord", "family declined — closed without referral, can reopen", {});
+        } else {
+          S.phase = "follow";
+          setAgent("coord", "done", "family accepted — to follow-up");
+          setAgent("follow", "working", "tracking referral, asking what happened");
+          queueTask("followup", "follow", "referral follow-up");
+          control("follow", "follow-up window opened");
+          handoff("coord", "follow", "accepted referral to follow-up");
+          emit("accepted", "follow", "family accepted — follow-up started (not an outcome yet)", { res: S.proposed });
+        }
+        return { ok: true };
+      },
+
+      followup: function (result) {
+        var bad = need(S.phase === "follow" && (result === "delivered" || result === "noanswer" || result === "skip"), "no pending follow-up");
+        if (bad) return bad;
+        S.phase = "outcome";
+        runTask("followup", "done");
+        if (result === "delivered") {
+          S.outcome = "confirmed";
+          var r = resById(RES, S.proposed);
+          if (r && r.attrs.slots > 0) r.attrs.slots--;
+          setAgent("follow", "done", "confirmation recorded with evidence");
+          emit("confirmed", "follow", "receipt confirmed with evidence — only now a confirmed outcome", { res: S.proposed });
+        } else if (result === "noanswer") {
+          S.outcome = "awaiting";
+          S.outcomeNote = "No answer — awaiting confirmation";
+          setAgent("follow", "waiting", "no answer — stays outstanding");
+          emit("awaiting", "follow", "unknown yet — status stays awaiting confirmation", {});
+        } else {
+          S.outcome = "closed-unconfirmed";
+          S.outcomeNote = "Follow-up skipped — closed without confirmation";
+          setAgent("follow", "done", "closed unconfirmed, transparently");
+          emit("closed-unconfirmed", "follow", "case closed unconfirmed — recorded transparently", {});
+        }
+        return { ok: true };
+      }
+    };
+    return api;
+  }
+
+  window.HeavenSim = {
+    createSim: createSim,
+    AGENTS: AGENTS,
+    RESOURCES: RESOURCES,
+    NEED: NEED,
+    evalCriteria: evalCriteria
+  };
+})();
+</script>
+<script>/* HEAVEN network topology — 2D Canvas, luminous particle flow.
+   Clusters: ORCHESTRATION / AGENTS / HUMAN REVIEW. Resize-safe (relative
+   layout recomputed on every resize, DPR-aware). rAF particles. Exposes
+   window.SimNet. */
+(function () {
+  "use strict";
+
+  var NODES = [
+    { id: "orch",    label: "Orchestrator",  cluster: "ORCHESTRATION", color: "#7fd4e8", tag: "ORC" },
+    { id: "intake",  label: "Intake",        cluster: "AGENTS",        color: "#7fd4e8", tag: "INT" },
+    { id: "verify",  label: "Verification",  cluster: "AGENTS",        color: "#b48cff", tag: "VER" },
+    { id: "discover",label: "Discovery",     cluster: "AGENTS",        color: "#3f8cff", tag: "DSC" },
+    { id: "match",   label: "Matching",      cluster: "AGENTS",        color: "#53e0c8", tag: "MAT" },
+    { id: "coord",   label: "Coordination",  cluster: "AGENTS",        color: "#f5c86e", tag: "CRD" },
+    { id: "follow",  label: "Follow-up",     cluster: "AGENTS",        color: "#4ade80", tag: "FLW" },
+    { id: "human",   label: "Human Gate",    cluster: "HUMAN REVIEW",  color: "#ff9a3c", tag: "HUM" },
+    { id: "family",  label: "Family",        cluster: "HUMAN REVIEW",  color: "#f5c86e", tag: "FAM" }
+  ];
+  var CHAIN = ["orch", "intake", "verify", "discover", "match", "coord", "follow"];
+  // data edges: [key, from, to, kind]  kind: line | curveL (left loop) | gate
+  var EDGES = [
+    ["orch>intake", "orch", "intake", "line"],
+    ["intake>verify", "intake", "verify", "line"],
+    ["verify>discover", "verify", "discover", "line"],
+    ["discover>match", "discover", "match", "line"],
+    ["match>coord", "match", "coord", "line"],
+    ["coord>human", "coord", "human", "gate"],
+    ["human>family", "human", "family", "line"],
+    ["family>follow", "family", "follow", "gate"],
+    ["coord>follow", "coord", "follow", "line"],
+    ["human>match", "human", "match", "curveL"],
+    ["human>coord", "human", "coord", "curveR"]
+  ];
+
+  var cv = null, ctx = null, W = 0, H = 0, DPR = 1, bgGrad = null;
+  var P = {};               // id -> {x, y}
+  var nodeState = {};       // id -> wait|active|done|blocked|human
+  var nodeSub = {};         // id -> sub label
+  var lit = {};             // edgeKey -> ttl seconds
+  var packets = [];
+  var selected = null;
+  var selCb = null;
+  var quality = "high";
+  var rafOn = false, lastT = 0;
+  var ro = null;
+
+  function reduced() {
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; }
+  }
+  function qHigh() { return quality === "high"; }
+  function maxPackets() { return qHigh() ? 90 : 26; }
+  function dustN() { return qHigh() ? 70 : 18; }
+
+  function nodeById(id) {
+    for (var i = 0; i < NODES.length; i++) if (NODES[i].id === id) return NODES[i];
+    return null;
+  }
+
+  function layout() {
+    if (!cv) return;
+    var i, x, y, top, gap;
+    var chainX = W * (W < 560 ? 0.36 : 0.40);
+    var gateX = W * (W < 560 ? 0.80 : 0.74);
+    var top = 54;
+    var bottom = H - 56;
+    gap = (bottom - top) / (CHAIN.length - 1);
+    P = {};
+    for (i = 0; i < CHAIN.length; i++) {
+      P[CHAIN[i]] = { x: chainX, y: top + gap * i };
+    }
+    // human review branch sits between coord and follow rows
+    var yCoord = P.coord.y, yFollow = P.follow.y;
+    P.human = { x: gateX, y: yCoord + (yFollow - yCoord) * 0.12 };
+    P.family = { x: gateX, y: yCoord + (yFollow - yCoord) * 0.88 };
+  }
+
+  function size() {
+    if (!cv) return;
+    DPR = qHigh() ? Math.min(2, window.devicePixelRatio || 1) : 1;
+    var r = cv.getBoundingClientRect();
+    W = Math.max(220, r.width);
+    H = Math.max(300, r.height || 420);
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, "#0b1330");
+    bgGrad.addColorStop(1, "#070b16");
+    layout();
+    // synchronous first paint: never leave a blank buffer after resize,
+    // even when rAF is throttled (background tab, print, export)
+    try { draw(performance.now()); } catch (e) {}
+  }
+
+  function edgeGeom(key) {
+    for (var i = 0; i < EDGES.length; i++) {
+      if (EDGES[i][0] !== key) continue;
+      var a = P[EDGES[i][1]], b = P[EDGES[i][2]], kind = EDGES[i][3];
+      if (!a || !b) return null;
+      if (kind === "line" || kind === "gate") return { kind: "line", x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+      // curves: control point offset to the side
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      var dx = kind === "curveL" ? -W * 0.30 : W * 0.22;
+      return { kind: "quad", x1: a.x, y1: a.y, cx: mx + dx, cy: my, x2: b.x, y2: b.y };
+    }
+    return null;
+  }
+
+  function pointOn(g, t) {
+    if (g.kind === "line") {
+      return { x: g.x1 + (g.x2 - g.x1) * t, y: g.y1 + (g.y2 - g.y1) * t };
+    }
+    var u = 1 - t;
+    return {
+      x: u * u * g.x1 + 2 * u * t * g.cx + t * t * g.x2,
+      y: u * u * g.y1 + 2 * u * t * g.cy + t * t * g.y2
+    };
+  }
+
+  function strokeEdge(g, style, width, dash) {
+    ctx.save();
+    ctx.strokeStyle = style;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    if (g.kind === "line") {
+      // stop short of node cores so lines never strike through labels
+      var dx = g.x2 - g.x1, dy = g.y2 - g.y1;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var trim = Math.min(22, len / 2 - 2);
+      var sx = g.x1 + dx / len * trim, sy = g.y1 + dy / len * trim;
+      var ex = g.x2 - dx / len * trim, ey = g.y2 - dy / len * trim;
+      ctx.moveTo(sx, sy); ctx.lineTo(ex, ey);
+    }
+    else { ctx.moveTo(g.x1, g.y1); ctx.quadraticCurveTo(g.cx, g.cy, g.x2, g.y2); }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function stateColor(st, base) {
+    if (st === "active") return "#ffffff";
+    if (st === "done") return "#4ade80";
+    if (st === "blocked") return "#ff9a3c";
+    if (st === "human") return "#ff9a3c";
+    return base;
+  }
+
+  function draw(now) {
+    var t = now * 0.001;
+    var i, k;
+    // opaque backdrop (keeps exports/screenshots truthful, no CSS dependency)
+    ctx.fillStyle = bgGrad || "#070b16";
+    ctx.fillRect(0, 0, W, H);
+
+    // cluster bands behind chain + branch
+    ctx.save();
+    var bands = [
+      { label: "CLUSTER · ORCHESTRATION", short: "ORCHESTRATION", y1: 8, y2: (P.orch.y + P.intake.y) / 2, c: "127,212,232" },
+      { label: "CLUSTER · AGENTS", short: "AGENTS", y1: (P.orch.y + P.intake.y) / 2, y2: (P.coord.y + P.follow.y) / 2 + 20, c: "83,224,200" },
+      { label: "CLUSTER · HUMAN REVIEW", short: "HUMAN REVIEW", y1: (P.coord.y + P.follow.y) / 2 + 20, y2: H - 8, c: "255,154,60" }
+    ];
+    // branch nodes live in right column: tint a side zone instead of full band for review
+    for (i = 0; i < bands.length; i++) {
+      var b = bands[i];
+      ctx.fillStyle = "rgba(" + b.c + ",0.05)";
+      ctx.strokeStyle = "rgba(" + b.c + ",0.16)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(6, b.y1, W - 12, Math.max(10, b.y2 - b.y1), 8);
+      else ctx.rect(6, b.y1, W - 12, Math.max(10, b.y2 - b.y1));
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(154,166,196,0.85)";
+      ctx.font = "9px ui-monospace, Menlo, Consolas, monospace";
+      ctx.textAlign = "left";
+      ctx.fillText(W < 560 ? b.short : b.label, 14, b.y1 + 14);
+    }
+    ctx.restore();
+
+    // ambient dust (deterministic positions, twinkle by time)
+    ctx.save();
+    var n = dustN();
+    for (i = 0; i < n; i++) {
+      var sx = ((i * 97.31 + 13) % W), sy = ((i * 57.77 + 29) % H);
+      var tw = 0.5 + 0.5 * Math.sin(t * 0.9 + i * 1.7);
+      ctx.globalAlpha = 0.06 + tw * 0.14;
+      ctx.fillStyle = "#9fc4e8";
+      ctx.fillRect(sx, sy, 1.5, 1.5);
+    }
+    ctx.restore();
+
+    // edges
+    for (i = 0; i < EDGES.length; i++) {
+      k = EDGES[i][0];
+      var g = edgeGeom(k);
+      if (!g) continue;
+      var isLit = lit[k] > 0;
+      var faint = EDGES[i][1] === "orch";
+      if (isLit) strokeEdge(g, "rgba(127,212,232,0.85)", 2, null);
+      else if (faint) strokeEdge(g, "rgba(127,212,232,0.10)", 1, [3, 4]);
+      else strokeEdge(g, "rgba(127,212,232,0.22)", 1.4, null);
+    }
+
+    // packets (additive glow)
+    ctx.save();
+    if (qHigh()) ctx.globalCompositeOperation = "lighter";
+    packets = packets.filter(function (p) { return p.t < 1; });
+    for (i = 0; i < packets.length; i++) {
+      var p = packets[i];
+      var pt = pointOn(p.g, p.t);
+      var alpha = 1 - p.t * 0.35;
+      ctx.globalAlpha = alpha;
+      if (qHigh()) { ctx.shadowBlur = 12; ctx.shadowColor = p.color; }
+      ctx.fillStyle = p.core;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, p.r, 0, 6.29); ctx.fill();
+      ctx.globalAlpha = alpha * 0.35;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, p.r + 4, 0, 6.29); ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+
+    // nodes
+    for (i = 0; i < NODES.length; i++) {
+      var nd = NODES[i], pos = P[nd.id];
+      if (!pos) continue;
+      var st = nodeState[nd.id] || "wait";
+      var col = stateColor(st, nd.color);
+      var pulse = (st === "active" && !reduced()) ? (0.5 + 0.5 * Math.sin(t * 4)) : 0;
+      ctx.save();
+      // halo
+      if (qHigh()) {
+        var halo = ctx.createRadialGradient(pos.x, pos.y, 2, pos.x, pos.y, 30 + pulse * 8);
+        halo.addColorStop(0, col + "");
+        ctx.globalAlpha = st === "wait" ? 0.10 : 0.30 + pulse * 0.15;
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, 26 + pulse * 6, 0, 6.29); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      // core
+      ctx.fillStyle = "#0b1122";
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, 15, 0, 6.29); ctx.fill();
+      ctx.lineWidth = (st === "active" || st === "blocked" || st === "human") ? 2.4 : 1.4;
+      ctx.strokeStyle = col;
+      if (st === "blocked" || st === "human") ctx.setLineDash([5, 3]);
+      if (qHigh()) { ctx.shadowBlur = st === "wait" ? 4 : 12; ctx.shadowColor = col; }
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, 15, 0, 6.29); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+      if (selected === nd.id) {
+        ctx.strokeStyle = "#f5c86e"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, 20, 0, 6.29); ctx.stroke();
+      }
+      // tag
+      ctx.fillStyle = col;
+      ctx.font = "700 10px ui-monospace, Menlo, Consolas, monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(nd.tag, pos.x, pos.y + 3.5);
+      // label with dark backdrop so text stays legible over lines and dust;
+      // branch nodes label to the side whenever the branch rows are cramped
+      var sideLabels = ((P.family && P.human ? P.family.y - P.human.y : 99) < 56);
+      var sideBranch = (sideLabels && (nd.id === "human" || nd.id === "family"));
+      var lx = sideBranch ? pos.x - 24 : pos.x;
+      var ly = sideBranch ? pos.y + 4 : pos.y + 32;
+      ctx.font = "600 12px system-ui, sans-serif";
+      ctx.textAlign = sideBranch ? "right" : "center";
+      var tw = ctx.measureText(nd.label).width;
+      ctx.fillStyle = "rgba(7,11,22,0.72)";
+      var bx = sideBranch ? lx - tw - 5 : lx - tw / 2 - 5;
+      ctx.fillRect(bx, ly - 12, tw + 10, 17);
+      ctx.fillStyle = st === "wait" ? "rgba(238,241,255,0.55)" : "#eef1ff";
+      ctx.fillText(nd.label, lx, ly);
+      var sub = nodeSub[nd.id] || "";
+      if (sub) {
+        ctx.font = "10px ui-monospace, Menlo, Consolas, monospace";
+        var salignRight = sideBranch;
+        ctx.textAlign = salignRight ? "right" : "center";
+        var sx = salignRight ? pos.x - 24 : pos.x;
+        var sy = salignRight ? pos.y + 19 : pos.y + 45;
+        var sw = ctx.measureText(sub).width;
+        ctx.fillStyle = "rgba(7,11,22,0.72)";
+        var sbx = salignRight ? sx - sw - 4 : sx - sw / 2 - 4;
+        ctx.fillRect(sbx, sy - 10, sw + 8, 14);
+        ctx.fillStyle = "rgba(154,166,196,0.9)";
+        ctx.fillText(sub, sx, sy);
+      }
+      ctx.restore();
+    }
+  }
+
+  function loop(now) {
+    if (!rafOn) return;
+    var dt = Math.min(0.1, (now - lastT) / 1000 || 0.016);
+    lastT = now;
+    for (var k in lit) if (lit[k] > 0) lit[k] -= dt;
+    var spd = reduced() ? 10 : 1;
+    for (var i = 0; i < packets.length; i++) packets[i].t += dt * packets[i].spd * spd;
+    if (!document.hidden && ctx) draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  function ensureLoop() {
+    if (!rafOn) { rafOn = true; lastT = performance.now(); requestAnimationFrame(loop); }
+  }
+
+  function onTap(e) {
+    var r = cv.getBoundingClientRect();
+    var cx = (e.clientX - r.left), cy = (e.clientY - r.top);
+    var best = null, bd = 30;
+    for (var id in P) {
+      var dx = P[id].x - cx, dy = P[id].y - cy;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < bd) { bd = d; best = id; }
+    }
+    if (best && selCb) selCb(best);
+  }
+
+  window.SimNet = {
+    NODES: NODES,
+    init: function (canvasId) {
+      cv = document.getElementById(canvasId);
+      if (!cv) return false;
+      ctx = cv.getContext("2d");
+      size();
+      window.addEventListener("resize", size);
+      if (window.ResizeObserver) {
+        ro = new ResizeObserver(function () { size(); });
+        ro.observe(cv);
+      }
+      cv.addEventListener("click", onTap);
+      document.addEventListener("visibilitychange", function () { ensureLoop(); });
+      ensureLoop();
+      return true;
+    },
+    render: function (states, subs, litEdges) {
+      nodeState = states || {};
+      nodeSub = subs || {};
+      if (litEdges) {
+        for (var i = 0; i < litEdges.length; i++) lit[litEdges[i]] = 1.4;
+      }
+    },
+    handoff: function (from, to, color) {
+      var key = from + ">" + to, g = null;
+      // allow virtual edges (orch control): draw straight orch->agent
+      var found = false;
+      for (var i = 0; i < EDGES.length; i++) if (EDGES[i][0] === key) found = true;
+      if (found) g = edgeGeom(key);
+      else if (P[from] && P[to]) g = { kind: "line", x1: P[from].x, y1: P[from].y, x2: P[to].x, y2: P[to].y };
+      if (!g) return;
+      if (reduced()) return;
+      while (packets.length >= maxPackets()) packets.shift();
+      var colors = { intake: "#7fd4e8", verify: "#b48cff", discover: "#3f8cff", match: "#53e0c8", coord: "#f5c86e", human: "#ff9a3c", follow: "#4ade80", orch: "#7fd4e8", family: "#f5c86e" };
+      var c = color || colors[from] || "#ffffff";
+      var burst = qHigh() ? 3 : 1;
+      for (var b = 0; b < burst; b++) {
+        packets.push({ g: g, t: -b * 0.12, spd: 1 / 0.9, color: c, core: "#ffffff", r: 3 });
+      }
+      lit[key] = 1.6;
+      ensureLoop();
+    },
+    pulse: function (nodeId) {
+      lit[nodeId] = 1.2;
+      ensureLoop();
+    },
+    pendingBeyond: function (nodeId) {
+      // packets currently traveling on edges downstream of nodeId
+      var down = { intake: ["intake>verify"], verify: ["verify>discover"], discover: ["discover>match"], match: ["match>coord"], coord: ["coord>human", "coord>follow"], human: ["human>family", "human>coord", "human>match"] };
+      var keys = down[nodeId] || [];
+      for (var i = 0; i < packets.length; i++) {
+        for (var j = 0; j < keys.length; j++) {
+          if (packets[i].key === keys[j] && packets[i].t < 1) return true;
+        }
+      }
+      return false;
+    },
+    tagPacketKeys: function () {
+      // stamp current packets with edge keys for halt assertions (called by tests)
+      for (var i = 0; i < packets.length; i++) if (!packets[i].key) packets[i].key = packets[i].edgeKey || "";
+    },
+    setQuality: function (q) { quality = (q === "low") ? "low" : "high"; size(); ensureLoop(); },
+    getQuality: function () { return quality; },
+    onSelect: function (cb) { selCb = cb; },
+    setSelected: function (id) { selected = id; },
+    packetCount: function () { return packets.filter(function (p) { return p.t < 1 && p.t >= 0; }).length; },
+    nodePos: function (id) { return P[id] ? { x: P[id].x, y: P[id].y } : null; },
+    canvasBox: function () { return cv ? cv.getBoundingClientRect() : null; }
+  };
+
+  // wrap handoff to record edge keys
+  var rawHandoff = null;
+  function patch() {
+    if (rawHandoff || !window.SimNet) return;
+    rawHandoff = window.SimNet.handoff;
+    window.SimNet.handoff = function (from, to, color) {
+      var r = rawHandoff(from, to, color);
+      for (var i = 0; i < packets.length; i++) {
+        if (!packets[i].key) packets[i].key = from + ">" + to;
+      }
+      return r;
+    };
+  }
+  patch();
+})();
+</script>
+<script>/* HEAVEN sim UI — control interface wiring. Panels, transport, decision
+   gates, operational inspection. Depends on window.HeavenSim + SimNet. */
+(function () {
+  "use strict";
+
+  var SCENARIOS = [
+    { id: "success", label: "Success", hint: "Full run to a confirmed referral",
+      script: [["startCase", "full"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "approve"], ["familySay", true], ["followup", "delivered"]] },
+    { id: "missing", label: "Missing Information", hint: "Halt at Verification, then clarify",
+      script: [["startCase", "incomplete"], ["completeDetails"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "approve"], ["familySay", true], ["followup", "noanswer"]] },
+    { id: "rejection", label: "Rejection", hint: "Human gate declines the referral",
+      script: [["startCase", "full"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "decline"]] },
+    { id: "unresolved", label: "Unresolved", hint: "Accepted but never confirmed",
+      script: [["startCase", "full"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "approve"], ["familySay", true], ["followup", "skip"]] }
+  ];
+
+  var STAGES = ["intake", "verify", "discover", "match", "coord", "human", "family", "follow", "outcome"];
+  var STAGE_LABEL = { intake: "Intake", verify: "Verification", discover: "Discovery", match: "Matching",
+    coord: "Coordination", human: "Human review", family: "Family decision", follow: "Follow-up", outcome: "Outcome" };
+  var OUTCOME_LABEL = { confirmed: "Confirmed", awaiting: "Awaiting confirmation",
+    declined: "Closed without referral", "closed-unconfirmed": "Unresolved",
+    "no-match": "No match", escalated: "Escalated to human" };
+
+  var sim = null, evts = [];
+  var scenIdx = 0, ptr = 0, autoOn = false, autoTimer = 0;
+  var selectedAgent = null;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function agentMeta(id) {
+    var list = window.HeavenSim.AGENTS;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    if (id === "orch") return { id: "orch", name: "Orchestrator", color: "#7fd4e8",
+      role: "Routes the case between agents and enforces the workflow order.",
+      logic: "One active stage at a time. No stage is skipped; halts propagate immediately." };
+    if (id === "family") return { id: "family", name: "Family (reviewer)", color: "#f5c86e",
+      role: "External human reviewer. Accepts or declines the offered referral.",
+      logic: "The decision belongs to the family. A decline closes the case without referral." };
+    return { id: id, name: id, color: "#9aa6c4", role: "", logic: "" };
+  }
+  function resName(id) {
+    var list = window.HeavenSim.RESOURCES;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i].name;
+    return id;
+  }
+
+  function phaseStage(phase) {
+    var map = { idle: -1, intake: 0, clarify: 1, verify: 1, discover: 2, match: 3,
+      coordinate: 4, review: 5, family: 6, follow: 7, outcome: 8 };
+    return map[phase] == null ? -1 : map[phase];
+  }
+
+  function newSim() {
+    stopAuto();
+    sim = window.HeavenSim.createSim(20261013);
+    evts = []; ptr = 0; selectedAgent = null;
+    window.SimNet.setSelected(null);
+    sim.on(onEvent);
+    $("histLog").innerHTML = "";
+    appendHist("sys", " simulator ready — pick a scenario and press Start. All data fictional.");
+    closeInspector();
+    renderAll();
+  }
+
+  function onEvent(e) {
+    evts.push(e);
+    appendHist(e.agent, e.text);
+    if (e.kind === "handoff" && e.data) window.SimNet.handoff(e.data.from, e.data.to);
+    if (e.kind === "control" && e.data) window.SimNet.handoff(e.data.from, e.data.to);
+    renderAll();
+    if (selectedAgent) renderInspectorLogs();
+  }
+
+  function appendHist(agent, text) {
+    var log = $("histLog");
+    var row = el("div", "hrow");
+    var tag = el("span", "htag", agent === "sys" ? "SYS" : agentMeta(agent).name);
+    try { tag.style.borderColor = agent === "sys" ? "#626d8c" : agentMeta(agent).color; tag.style.color = agent === "sys" ? "#9aa6c4" : agentMeta(agent).color; } catch (_) {}
+    row.appendChild(tag);
+    row.appendChild(el("span", "htext", text));
+    log.appendChild(row);
+    while (log.children.length > 80) log.removeChild(log.firstChild);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function statusFor(snap) {
+    if (snap.phase === "idle") return ["STANDBY", "idle"];
+    if (snap.phase === "clarify") return ["AWAITING INFO", "warn"];
+    if (snap.phase === "review") return ["AWAITING REVIEW", "warn"];
+    if (snap.phase === "family") return ["AWAITING FAMILY", "warn"];
+    if (snap.phase === "follow") return ["TRACKING", "run"];
+    if (snap.phase === "outcome") {
+      if (snap.outcome === "confirmed") return ["CONFIRMED", "ok"];
+      if (snap.outcome === "awaiting") return ["AWAITING CONFIRMATION", "warn"];
+      if (snap.outcome === "closed-unconfirmed") return ["UNRESOLVED", "bad"];
+      if (snap.outcome === "declined") return ["CLOSED · NO REFERRAL", "bad"];
+      return ["OUTCOME · " + String(snap.outcome).toUpperCase(), "warn"];
+    }
+    return ["RUNNING", "run"];
+  }
+
+  function renderAll() {
+    var snap = sim.snapshot();
+    var st = statusFor(snap);
+    var pill = $("casePill");
+    pill.textContent = st[0];
+    pill.className = "pill p-" + st[1];
+
+    $("kvStage").textContent = snap.phase === "idle" ? "—" :
+      (snap.phase === "clarify" ? "Verification · halted" : STAGE_LABEL[STAGES[phaseStage(snap.phase)]] || snap.phase);
+    var activeAgent = activeAgentFor(snap);
+    $("kvAgent").textContent = activeAgent ? agentMeta(activeAgent).name : "—";
+    var out = snap.outcome ? (OUTCOME_LABEL[snap.outcome] || snap.outcome) : "—";
+    if (snap.outcomeNote) out += " — " + snap.outcomeNote;
+    $("kvOutcome").textContent = snap.phase === "idle" ? "—" : out;
+    $("kvRef").textContent = snap.proposed ? resName(snap.proposed) : "—";
+
+    // stage panel
+    var idx = phaseStage(snap.phase);
+    $("stageName").textContent = snap.phase === "idle" ? "Standby — no case running" :
+      ("Stage " + (idx + 1) + " / 9 · " + (snap.phase === "clarify" ? "Verification · halted" : STAGE_LABEL[STAGES[idx]]));
+    $("stageBarFill").style.width = snap.phase === "idle" ? "0%" : Math.round(((idx + 1) / 9) * 100) + "%";
+    $("stageAgent").textContent = activeAgent ?
+      ("Active: " + agentMeta(activeAgent).name + " — " + snap.agents[activeAgent].task) : "No active agent";
+    $("statusLine").textContent = snap.phase === "idle" ? "simulator idle · all data fictional" :
+      ("tick " + snap.tick + " · event " + snap.seq + " · " + st[0].toLowerCase());
+
+    renderNet(snap);
+    renderGates(snap);
+    renderTransport(snap);
+  }
+
+  function activeAgentFor(snap) {
+    if (snap.phase === "idle" || snap.phase === "outcome") return null;
+    if (snap.phase === "clarify" || snap.phase === "verify") return "verify";
+    if (snap.phase === "review") return "human";
+    if (snap.phase === "family") return "coord";
+    var map = { intake: "intake", discover: "discover", match: "match", coordinate: "coord", follow: "follow" };
+    return map[snap.phase] || null;
+  }
+
+  function renderNet(snap) {
+    var ids = ["orch", "intake", "verify", "discover", "match", "coord", "follow", "human", "family"];
+    var states = {}, subs = {}, litEdges = [];
+    var order = { orch: 0, intake: 1, verify: 2, discover: 3, match: 4, coord: 5, human: 5.5, family: 6, follow: 7 };
+    var active = activeAgentFor(snap);
+    var progress = phaseStage(snap.phase);
+    ids.forEach(function (id) {
+      var a = snap.agents[id];
+      var st = "wait", sub = "";
+      if (id === "orch") {
+        st = snap.phase === "idle" ? "wait" : (snap.phase === "outcome" ? "done" : "active");
+        sub = snap.phase === "idle" ? "standby" : snap.phase;
+      } else if (id === "human") {
+        if (snap.phase === "review") { st = "human"; sub = "decision pending"; }
+        else if (snap.reviewDecision) { st = "done"; sub = snap.reviewDecision; }
+      } else if (id === "family") {
+        if (snap.phase === "family") { st = "human"; sub = "decision pending"; }
+        else if (snap.familyAccepted === true) { st = "done"; sub = "accepted"; }
+        else if (snap.familyAccepted === false) { st = "done"; sub = "declined"; }
+      } else if (a) {
+        if (id === active) st = (a.state === "waiting" || snap.phase === "clarify") ? "blocked" : "active";
+        else if (a.state === "done") st = "done";
+        else if (a.state === "waiting") st = "blocked";
+        else if (a.state === "working") st = "active";
+        sub = a.state === "idle" ? "" : a.state;
+        if (snap.phase === "clarify" && id === "verify") { st = "blocked"; sub = "halted · gaps"; }
+      }
+      // downstream of a clarify halt stays waiting until the gate clears
+      states[id] = st; subs[id] = sub;
+      void order;
+    });
+    if (snap.phase !== "idle") {
+      var chain = [["orch", "intake"], ["intake", "verify"], ["verify", "discover"], ["discover", "match"], ["match", "coord"], ["coord", "follow"]];
+      chain.forEach(function (pair) {
+        if (states[pair[0]] === "done" || states[pair[0]] === "active") litEdges.push(pair[0] + ">" + pair[1]);
+      });
+      if (snap.phase === "review" || snap.reviewDecision) litEdges.push("coord>human");
+      if (snap.familyAccepted != null || snap.phase === "family") litEdges.push("human>family", "family>follow");
+    }
+    window.SimNet.render(states, subs, litEdges);
+  }
+
+  function gateBtn(label, cls, fn) {
+    var b = el("button", "btn " + cls, label);
+    b.type = "button";
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  function renderGates(snap) {
+    var box = $("gateBox");
+    box.innerHTML = "";
+    if (snap.phase === "idle") {
+      box.appendChild(el("p", "muted", "No pending gates. Start a scenario to open the workflow."));
+      return;
+    }
+    if (snap.phase === "clarify") {
+      box.appendChild(el("p", "gateTitle", "DECISION GATE · MISSING INFORMATION"));
+      box.appendChild(el("p", "muted", "Verification halted: city and duration are missing. Particle flow stops at Verification until this gate clears."));
+      var row = el("div", "btnRow");
+      row.appendChild(gateBtn("Request Clarification", "amber", function () {
+        sim.annotate("verify", "clarification requested from Intake (city, duration)");
+        appendHist("verify", "clarification request sent — Submit Missing Details is now available");
+        var sb = $("gateSubmitBtn");
+        if (sb) { sb.disabled = false; sb.focus(); }
+      }));
+      var submit = gateBtn("Submit Missing Details", "primary", function () {
+        var r = sim.completeDetails();
+        if (r && r.error) appendHist("sys", "blocked: " + r.error);
+      });
+      submit.id = "gateSubmitBtn";
+      submit.disabled = true;
+      row.appendChild(submit);
+      box.appendChild(row);
+      return;
+    }
+    if (snap.phase === "review") {
+      box.appendChild(el("p", "gateTitle", "DECISION GATE · HUMAN REVIEW"));
+      box.appendChild(el("p", "muted", "Proposed: " + resName(snap.proposed) + ". A human must approve, decline, or request clarification. Nothing auto-refers."));
+      var row2 = el("div", "btnRow");
+      row2.appendChild(gateBtn("Approve", "green", function () { exec("reviewDecision", "approve"); }));
+      row2.appendChild(gateBtn("Decline", "red", function () { exec("reviewDecision", "decline"); }));
+      row2.appendChild(gateBtn("Request Clarification", "amber", function () { exec("reviewDecision", "clarify"); }));
+      box.appendChild(row2);
+      return;
+    }
+    if (snap.phase === "family") {
+      box.appendChild(el("p", "gateTitle", "DECISION GATE · FAMILY"));
+      box.appendChild(el("p", "muted", "Offered: " + resName(snap.proposed) + ". The decision belongs to the family."));
+      var row3 = el("div", "btnRow");
+      row3.appendChild(gateBtn("Family Accepts", "green", function () { exec("familySay", true); }));
+      row3.appendChild(gateBtn("Family Declines", "red", function () { exec("familySay", false); }));
+      box.appendChild(row3);
+      return;
+    }
+    if (snap.phase === "follow") {
+      box.appendChild(el("p", "gateTitle", "DECISION GATE · FOLLOW-UP"));
+      box.appendChild(el("p", "muted", "Only confirmed receipt counts as a confirmed outcome."));
+      var row4 = el("div", "btnRow");
+      row4.appendChild(gateBtn("Confirm Receipt", "green", function () { exec("followup", "delivered"); }));
+      row4.appendChild(gateBtn("No Answer", "amber", function () { exec("followup", "noanswer"); }));
+      row4.appendChild(gateBtn("Close Unresolved", "ghost", function () { exec("followup", "skip"); }));
+      box.appendChild(row4);
+      return;
+    }
+    if (snap.phase === "outcome") {
+      box.appendChild(el("p", "gateTitle", "CASE CLOSED"));
+      box.appendChild(el("p", "muted", (OUTCOME_LABEL[snap.outcome] || snap.outcome) + (snap.outcomeNote ? " — " + snap.outcomeNote : "")));
+      box.appendChild(gateBtn("Replay Scenario", "primary", function () { loadScenario(scenIdx); kickAndAuto(); }));
+      return;
+    }
+    box.appendChild(el("p", "muted", "No action required — agents are working. Use Step or Auto to advance."));
+  }
+
+  function renderTransport(snap) {
+    var done = snap.phase === "outcome";
+    $("stepBtn").disabled = done || snap.phase === "idle";
+    $("autoBtn").disabled = done || snap.phase === "idle";
+    $("autoBtn").textContent = autoOn ? "Pause" : "Auto";
+    $("startBtn").textContent = snap.phase === "idle" ? "Start Simulation" : "Restart";
+  }
+
+  function exec(name, arg) {
+    var r = (arg === undefined) ? sim[name]() : sim[name](arg);
+    if (r && r.error) appendHist("sys", "blocked: " + r.error);
+    else advancePtr(name, arg);
+    return r;
+  }
+
+  function advancePtr(name, arg) {
+    var sc = SCENARIOS[scenIdx].script;
+    if (ptr < sc.length && sc[ptr][0] === name && (sc[ptr][1] === undefined || sc[ptr][1] === arg)) ptr++;
+  }
+
+  function doStep() {
+    var snap = sim.snapshot();
+    if (snap.phase === "idle" || snap.phase === "outcome") return;
+    var sc = SCENARIOS[scenIdx].script;
+    // gated phases need a human click, not Step
+    if (snap.phase === "clarify" || snap.phase === "review" || snap.phase === "family" || snap.phase === "follow") {
+      appendHist("sys", "gate is open — use the decision buttons in Pending Decision Gates.");
+      var gb = $("gateBox");
+      gb.classList.remove("flash");
+      void gb.offsetWidth;
+      gb.classList.add("flash");
+      return;
+    }
+    if (ptr >= sc.length) return;
+    var act = sc[ptr];
+    exec(act[0], act[1]);
+  }
+
+  function kickAndAuto() {
+    // first scripted action fires immediately (even from idle), then auto-run
+    var sc = SCENARIOS[scenIdx].script;
+    if (ptr < sc.length) exec(sc[ptr][0], sc[ptr][1]);
+    startAuto();
+  }
+
+  function stopAuto() {
+    autoOn = false;
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = 0; }
+  }
+
+  function startAuto() {
+    var snap = sim.snapshot();
+    if (snap.phase === "idle" || snap.phase === "outcome") return;
+    stopAuto();
+    autoOn = true;
+    renderTransport(sim.snapshot());
+    $("autoBtn").textContent = "Pause";
+    autoTimer = setInterval(function () {
+      var s = sim.snapshot();
+      if (s.phase === "outcome" || s.phase === "clarify" || s.phase === "review" || s.phase === "family" || s.phase === "follow") {
+        stopAuto(); renderTransport(sim.snapshot()); return;
+      }
+      doStep();
+      var s2 = sim.snapshot();
+      if (s2.phase === "outcome") { stopAuto(); renderTransport(s2); }
+    }, 800);
+  }
+
+  function loadScenario(i) {
+    scenIdx = i;
+    var pills = document.querySelectorAll(".scen");
+    for (var k = 0; k < pills.length; k++) pills[k].setAttribute("aria-pressed", k === i ? "true" : "false");
+    newSim();
+  }
+
+  // ---- inspection panel ----
+  function openInspector(agentId) {
+    selectedAgent = agentId;
+    window.SimNet.setSelected(agentId);
+    var m = agentMeta(agentId);
+    var snap = sim.snapshot();
+    $("inspectTitle").textContent = m.name;
+    try { $("inspectTitle").style.color = m.color; } catch (_) {}
+    var a = snap.agents[agentId];
+    $("inspectState").textContent = "state: " + (a ? a.state : (agentId === "orch" ? snap.phase : agentId === "family" ? (snap.familyAccepted == null ? "pending" : "decided") : "—"));
+    $("inspectTask").textContent = "current: " + (a ? a.task : (agentId === "orch" ? "routing " + snap.phase : agentId === "family" ? "review offered referral" : "—"));
+    $("inspectRole").textContent = m.role;
+    $("inspectLogic").textContent = m.logic;
+    var io = $("inspectIO");
+    io.innerHTML = "";
+    io.appendChild(ioRow("input", inputFor(agentId, snap)));
+    io.appendChild(ioRow("output", outputFor(agentId, snap)));
+    io.appendChild(ioRow("cluster", clusterFor(agentId)));
+    if (agentId === "coord") {
+      io.appendChild(ioRow("referral pipeline",
+        "proposed=" + (snap.proposed ? resName(snap.proposed) : "none") +
+        " · duplicates=none found · family contact=" + (snap.phase === "family" ? "offered, awaiting decision" : snap.familyAccepted === true ? "accepted" : snap.familyAccepted === false ? "declined" : "not yet offered") +
+        " · never auto-refers without human approval"));
+    }
+    renderInspectorLogs();
+    $("inspector").classList.add("open");
+  }
+  function ioRow(k, v) {
+    var d = el("div", "iorow");
+    d.appendChild(el("span", "iok", k));
+    d.appendChild(el("span", "iov", v));
+    return d;
+  }
+  function clusterFor(id) {
+    if (id === "orch") return "ORCHESTRATION";
+    if (id === "human" || id === "family") return "HUMAN REVIEW";
+    return "AGENTS";
+  }
+  function inputFor(id, snap) {
+    if (id === "intake") return "raw household message (Riyadh, food, 1 week)";
+    if (id === "verify") return "structured request + gap list (" + (snap.gaps.length ? snap.gaps.join(", ") : "none") + ")";
+    if (id === "discover") return "verified request (daily, ≤10 km, Arabic, no ID)";
+    if (id === "match") return snap.searchResults.length + " screened resources";
+    if (id === "coord") return "chosen candidate" + (snap.proposed ? ": " + resName(snap.proposed) : "");
+    if (id === "human") return "referral pack" + (snap.proposed ? ": " + resName(snap.proposed) : "");
+    if (id === "follow") return snap.familyAccepted ? "accepted referral" : "accepted referral (pending)";
+    if (id === "orch") return "case events";
+    return "offered referral";
+  }
+  function outputFor(id, snap) {
+    if (id === "intake") return snap.structured ? "structured case" : "gap flag";
+    if (id === "verify") return snap.phase === "clarify" ? "HALT · clarification requested" : "verified case";
+    if (id === "discover") return snap.shortlist.length + " viable";
+    if (id === "match") return snap.proposed ? "choice: " + resName(snap.proposed) : "ranking";
+    if (id === "coord") return snap.phase === "review" || snap.reviewDecision ? "referral at gate" : "referral pack";
+    if (id === "human") return snap.reviewDecision ? snap.reviewDecision : "pending decision";
+    if (id === "follow") return snap.outcome ? (OUTCOME_LABEL[snap.outcome] || snap.outcome) : "tracking";
+    if (id === "orch") return "routed " + snap.tick + " ticks";
+    return snap.familyAccepted == null ? "pending" : String(snap.familyAccepted);
+  }
+  function renderInspectorLogs() {
+    if (!selectedAgent) return;
+    var box = $("inspectLogs");
+    box.innerHTML = "";
+    var mine = evts.filter(function (e) { return e.agent === selectedAgent; }).slice(-6);
+    if (!mine.length) box.appendChild(el("p", "muted", "No log entries for " + agentMeta(selectedAgent).name + " yet — run the simulation."));
+    mine.forEach(function (e) {
+      box.appendChild(el("div", "lrow", "#" + e.seq + " · " + e.text));
+    });
+  }
+  function closeInspector() {
+    selectedAgent = null;
+    if (window.SimNet) window.SimNet.setSelected(null);
+    $("inspector").classList.remove("open");
+  }
+
+  function buildStatic() {
+    // scenario pills
+    var row = $("scenRow");
+    SCENARIOS.forEach(function (sc, i) {
+      var b = el("button", "scen");
+      b.type = "button";
+      b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      b.appendChild(el("span", "scenName", sc.label));
+      b.appendChild(el("small", null, sc.hint));
+      b.addEventListener("click", function () { loadScenario(i); });
+      row.appendChild(b);
+    });
+    // roster
+    var ros = $("agentRoster");
+    window.SimNet.NODES.forEach(function (n) {
+      var m = agentMeta(n.id);
+      var b = el("button", "rosterBtn");
+      b.type = "button";
+      var dot = el("span", "dot");
+      try { dot.style.background = m.color; } catch (_) {}
+      b.appendChild(dot);
+      b.appendChild(el("span", null, m.name));
+      b.addEventListener("click", function () { openInspector(n.id); });
+      ros.appendChild(b);
+    });
+    $("startBtn").addEventListener("click", function () {
+      var s = sim.snapshot();
+      if (s.phase !== "idle") { loadScenario(scenIdx); }
+      kickAndAuto();
+    });
+    $("stepBtn").addEventListener("click", function () { stopAuto(); renderTransport(sim.snapshot()); doStep(); });
+    $("autoBtn").addEventListener("click", function () {
+      if (autoOn) { stopAuto(); renderTransport(sim.snapshot()); }
+      else startAuto();
+    });
+    $("qualityBtn").addEventListener("click", function () {
+      var q = window.SimNet.getQuality() === "high" ? "low" : "high";
+      window.SimNet.setQuality(q);
+      $("qualityBtn").textContent = "Quality: " + (q === "high" ? "High" : "Low");
+    });
+    $("inspectClose").addEventListener("click", closeInspector);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeInspector(); });
+    window.SimNet.onSelect(openInspector);
+  }
+
+  function boot() {
+    if (!window.HeavenSim || !window.SimNet) {
+      document.getElementById("statusLine").textContent = "failed to load sim modules";
+      return;
+    }
+    if (!window.SimNet.init("simCanvas")) {
+      document.getElementById("statusLine").textContent = "canvas unavailable";
+      return;
+    }
+    buildStatic();
+    newSim();
+    window.HeavenSimUI = {
+      snapshot: function () { return sim.snapshot(); },
+      loadScenario: loadScenario, startAuto: startAuto, doStep: doStep,
+      openInspector: openInspector, events: function () { return evts.slice(); }
+    };
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
