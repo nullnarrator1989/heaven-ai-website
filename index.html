@@ -1,1399 +1,273 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="HEAVEN — interactive AI operations simulation: follow a humanitarian case through an assisted coordination workflow.">
-<title>HEAVEN — AI Operations Simulator</title>
-<style>
-:root{
-  --bg:#070b16; --bg2:#0b1122; --ink:#eef1ff; --dim:#9aa6c4; --faint:#626d8c;
-  --cyan:#7fd4e8; --blue:#3f8cff; --teal:#53e0c8; --violet:#b48cff;
-  --gold:#f5c86e; --amber:#ff9a3c; --green:#4ade80; --red:#f87171;
-  --line:rgba(127,212,232,.15); --line2:rgba(127,212,232,.32);
-  --card:rgba(13,20,40,.82); --radius:12px;
-  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0; padding:0;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg); color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;
-  min-height:100vh; line-height:1.65; overflow-x:hidden; font-size:16px;}
-:focus-visible{outline:2px solid var(--cyan); outline-offset:2px; border-radius:6px;}
-[hidden]{display:none !important;}
-a{color:var(--cyan);}
-h2{font-size:1.02rem; margin:0 0 6px; letter-spacing:.02em;}
-.sub{font-size:.78rem; color:var(--dim); font-weight:400; display:block;}
-/* top bar */
-.topbar{position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:8px;
-  padding:8px 12px; background:rgba(7,11,22,.92); backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line); flex-wrap:wrap;}
-.sitelogo{display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--ink);
-  font-weight:800; letter-spacing:.14em; font-size:.8rem;}
-.sitelogo img{width:28px; height:auto;}
-.honest{font-size:.62rem; letter-spacing:.06em; color:var(--amber);
-  border:1px solid rgba(255,154,60,.45); border-radius:999px; padding:3px 10px; white-space:nowrap;}
-.topbtns{display:flex; gap:6px; margin-inline-start:auto;}
-.tbtn{background:transparent; border:1px solid var(--line); color:var(--ink);
-  border-radius:999px; padding:7px 14px; font-size:.84rem; cursor:pointer; min-height:40px;}
-/* layout */
-.wrap{max-width:1180px; margin:0 auto; padding:14px 12px 40px;}
-.scenRow{display:flex; gap:8px; overflow-x:auto; padding:2px 0 10px; -webkit-overflow-scrolling:touch;}
-.scen{flex:1 0 auto; min-width:150px; border:1px solid var(--line); background:var(--card);
-  color:var(--ink); border-radius:10px; padding:10px 12px; font-size:.82rem; cursor:pointer;
-  min-height:52px; text-align:start;}
-.scen small{display:block; color:var(--dim); font-size:.7rem;}
-.scen[aria-pressed="true"]{border-color:var(--cyan); background:rgba(63,140,255,.12);}
-.caseCard{background:var(--card); border:1px solid var(--line2); border-radius:var(--radius);
-  padding:14px 16px; margin-bottom:12px;}
-.caseGrid{display:grid; grid-template-columns:1fr; gap:6px; font-size:.88rem;}
-.kv{display:grid; grid-template-columns:110px 1fr; gap:3px 10px; font-size:.85rem;}
-.kv dt{color:var(--dim);} .kv dd{margin:0;}
-.transport{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 2px;}
-.btn{padding:11px 20px; border-radius:10px; border:1px solid var(--line);
-  background:rgba(24,34,66,.7); color:var(--ink); font-size:.9rem; cursor:pointer;
-  min-height:48px; transition:transform .2s ease, background .25s ease;}
-.btn:active{transform:scale(.96);}
-.btn.primary{background:linear-gradient(135deg,var(--blue),#22b8d4); border:0; font-weight:700;}
-.btn.amber{border-color:rgba(255,154,60,.55); color:var(--amber);}
-.btn.green{border-color:rgba(74,222,128,.5); color:var(--green);}
-.btn.ghost{background:transparent;}
-.btn:disabled{opacity:.38;}
-.pill{display:inline-block; font-size:.7rem; letter-spacing:.04em; border:1px solid var(--line);
-  border-radius:999px; padding:2px 10px; color:var(--dim); margin:1px 2px;}
-.pill.work{border-color:var(--cyan); color:var(--cyan);}
-.pill.wait{border-color:var(--amber); color:var(--amber);}
-.pill.done{border-color:var(--green); color:var(--green);}
-.pill.bad{border-color:var(--red); color:var(--red);}
-/* workflow graph */
-.flowWrap{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-  padding:10px 6px 4px; margin-bottom:12px;}
-#flowSvg{display:block; width:100%; height:auto;}
-.fnode{cursor:pointer;}
-.fnode rect{fill:rgba(20,30,58,.9); stroke:var(--line); stroke-width:1.2; rx:9;}
-.fnode text{fill:var(--ink); font-size:12.5px; font-weight:600;}
-.fnode .st{font-size:10px; font-weight:400;}
-.fnode.waiting{opacity:.55;}
-.fnode.active rect{stroke:var(--cyan); stroke-width:2;}
-.fnode.active .dot{fill:var(--cyan);}
-.fnode.done rect{stroke:rgba(74,222,128,.6);}
-.fnode.done .dot{fill:var(--green);}
-.fnode.blocked rect{stroke:var(--amber); stroke-width:2;}
-.fnode.blocked .dot{fill:var(--amber);}
-.fnode.failed rect{stroke:var(--red);}
-.fnode.failed .dot{fill:var(--red);}
-.fnode.human rect{stroke:var(--amber); stroke-width:2; stroke-dasharray:5 3;}
-.fedge{stroke:rgba(127,212,232,.28); stroke-width:1.6; fill:none;}
-.fedge.lit{stroke:var(--cyan); stroke-width:2.2;}
-.fedge.dim{stroke:rgba(127,212,232,.1);}
-.fpacket{fill:#fff;}
-.fnode.sel rect{stroke:var(--gold); stroke-width:2.4;}
-/* tabs + panels */
-.tabs{display:flex; gap:6px; margin:10px 0; position:sticky; top:57px; z-index:20;
-  background:rgba(7,11,22,.94); padding:6px 0;}
-.tab{flex:1; background:transparent; border:1px solid var(--line); color:var(--dim);
-  border-radius:9px; padding:9px 4px; font-size:.8rem; cursor:pointer; min-height:44px;}
-.tab[aria-selected="true"]{color:var(--ink); border-color:var(--cyan); background:rgba(63,140,255,.12);}
-.panel{display:none;}
-.panel.show{display:block;}
-.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
-  padding:14px 16px; margin-bottom:12px;}
-.agent{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:8px 0;
-  cursor:pointer; font-size:.84rem;}
-.agent.sel{border-color:var(--gold);}
-.agent .hd{display:flex; align-items:center; gap:8px;}
-.agent .swatch{width:11px; height:11px; border-radius:3px; flex:none;}
-.agent .nm{flex:1; font-weight:700;}
-.agent .tk{color:var(--dim); font-size:.8rem; margin-top:4px;}
-.agent .lt{color:var(--faint); font-size:.76rem; margin-top:2px;}
-.resrow{border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:8px 0;
-  cursor:pointer; font-size:.85rem;}
-.resrow.sel{border-color:var(--gold);}
-.resrow.dead{opacity:.5;}
-.resrow.lit{border-color:var(--green);}
-.crit{display:flex; gap:6px; align-items:baseline; font-size:.78rem; color:var(--dim); padding:2px 0;}
-.crit .y{color:var(--green);} .crit .n{color:var(--red);}
-.decisionBox{border:1px solid rgba(255,154,60,.5); border-radius:10px; padding:12px;
-  background:rgba(255,154,60,.05); margin:8px 0;}
-.decisionBox .btns{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
-.decisionBox .btns .btn{flex:1 1 30%;}
-.tl{position:relative; margin:6px 0 0; padding-inline-start:18px;}
-.tl::before{content:""; position:absolute; inset-inline-start:5px; top:6px; bottom:6px;
-  width:2px; background:var(--line);}
-.tlItem{position:relative; padding:5px 0 5px 2px; font-size:.83rem;}
-.tlItem::before{content:""; position:absolute; inset-inline-start:-17px; top:11px;
-  width:9px; height:9px; border-radius:50%; background:var(--faint);}
-.tlItem.done::before{background:var(--green);}
-.tlItem.now::before{background:var(--cyan); box-shadow:0 0 8px var(--cyan);}
-.tlItem small{color:var(--dim); display:block; font-size:.72rem;}
-.term{background:#04060f; border:1px solid var(--line); border-radius:10px;
-  font-family:var(--mono); font-size:.74rem; line-height:1.7; max-height:320px;
-  overflow-y:auto; padding:10px 12px; direction:ltr; text-align:left;}
-.term .ln{white-space:pre-wrap; word-break:break-word; padding:2px 0; border-bottom:1px dotted rgba(127,212,232,.09); cursor:pointer;}
-.term .ln.sel{background:rgba(245,200,110,.08);}
-.term .sq{color:var(--faint); margin-right:8px;}
-.sheet{position:fixed; z-index:60; bottom:0; inset-inline:0; max-height:64vh; overflow-y:auto;
-  background:rgba(8,12,26,.98); border-top:1px solid var(--line2); border-radius:16px 16px 0 0;
-  padding:16px 18px calc(20px + env(safe-area-inset-bottom)); box-shadow:0 -12px 40px rgba(0,0,0,.6);}
-.sheet h3{margin:0 0 6px; font-size:1rem;}
-.sheet .x{position:absolute; top:10px; inset-inline-end:12px;}
-/* live dock: sticky status anchor under the topbar */
-.livedock{position:sticky; z-index:35; background:rgba(8,12,26,.95); backdrop-filter:blur(8px);
-  border:1px solid var(--line2); border-radius:12px; padding:8px 12px; margin-bottom:12px;}
-.liveRow{display:flex; align-items:center; gap:8px;}
-.livedot{width:9px; height:9px; border-radius:50%; background:var(--green); flex:none;}
-.livedock.paused .livedot{background:var(--amber);}
-.livedock.alert{border-color:var(--gold);}
-.liveStage{font-weight:700; font-size:.85rem; white-space:nowrap;}
-.liveAgent{color:var(--dim); font-size:.76rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.followBtn{margin-inline-start:auto; flex:none; background:transparent; border:1px solid var(--line);
-  color:var(--dim); border-radius:999px; padding:7px 14px; font-size:.78rem; cursor:pointer; min-height:40px;}
-.livedock.paused .followBtn{border-color:var(--gold); color:var(--gold); animation:followPulse 1.6s ease-in-out infinite;}
-@keyframes followPulse{0%,100%{box-shadow:none;}50%{box-shadow:0 0 10px rgba(245,200,110,.55);}}
-.liveEvt{font-size:.78rem; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  cursor:pointer; margin-top:2px; text-align:start; background:none; border:0; padding:0; width:100%;}
-.liveEvt:hover{color:var(--ink);}
-/* bottom action bar: primary controls always in thumb reach */
-.actionbar{position:fixed; bottom:0; inset-inline:0; z-index:50; display:flex; gap:8px;
-  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-  background:rgba(7,11,22,.93); backdrop-filter:blur(10px); border-top:1px solid var(--line);}
-.actionbar .btn{flex:1 1 0; min-height:48px;}
-.wrap{padding-bottom:110px;}
-footer{padding-bottom:130px;}
-/* follow flash on the card that received the action */
-.flash{animation:flash 1.3s ease-out;}
-@keyframes flash{0%{box-shadow:0 0 0 2px var(--gold);}100%{box-shadow:0 0 0 0 transparent;}}
-.card,.caseCard,.flowWrap{scroll-margin-top:var(--anchor,150px);}
-/* ---------- living simulation visuals (all event-driven, GPU-cheap) ---------- */
-#ambient{position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.6;}
-.wrap,footer{position:relative; z-index:1;}
-body::before{content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
-  background:radial-gradient(900px 420px at 50% -6%, var(--phaseSoft, rgba(127,212,232,0)), rgba(0,0,0,0) 70%);}
-/* flowing lit edges + glowing packets */
-.fedge.lit{stroke-dasharray:6 8; animation:dashflow 1s linear infinite;}
-@keyframes dashflow{to{stroke-dashoffset:-14;}}
-.fpacket{filter:drop-shadow(0 0 4px #fff);}
-/* active-node halo + smooth state transitions */
-.fnode rect{transition:stroke .45s ease, opacity .45s ease;}
-.fnode .halo{fill:none; stroke:var(--cyan); stroke-width:1.5; opacity:0; pointer-events:none;}
-.fnode.active rect{filter:drop-shadow(0 0 7px rgba(127,212,232,.8));}
-.fnode.active .halo{animation:haloPulse 1.8s ease-out infinite;}
-.fnode.human .halo{stroke:var(--amber);}
-.fnode.human rect{filter:drop-shadow(0 0 7px rgba(255,154,60,.8));}
-@keyframes haloPulse{0%,100%{opacity:.15;}50%{opacity:.9;}}
-/* agents: per-agent color identity, breathing live card, tick on fresh event */
-.agent{border-inline-start:3px solid var(--ag, transparent); transition:border-color .3s ease, box-shadow .3s ease;}
-.agent.live{border-color:var(--cyan); animation:agentBreathe 2.4s ease-in-out infinite;}
-@keyframes agentBreathe{0%,100%{box-shadow:0 0 0 1px rgba(127,212,232,.3), 0 0 14px rgba(127,212,232,.12);}
-  50%{box-shadow:0 0 0 1px rgba(127,212,232,.65), 0 0 26px rgba(127,212,232,.3);}}
-.agent.tick .swatch{animation:swPulse .7s ease-out;}
-@keyframes swPulse{0%{box-shadow:0 0 0 0 var(--ag, #fff);}100%{box-shadow:0 0 0 9px transparent;}}
-/* human-review gate calls for attention */
-.card.gate{border-color:rgba(255,154,60,.65); animation:gatePulse 2.2s ease-in-out infinite;}
-@keyframes gatePulse{0%,100%{box-shadow:0 0 10px rgba(255,154,60,.12);}
-  50%{box-shadow:0 0 30px rgba(255,154,60,.35);}}
-/* fresh event lines slide in; dock dot glows */
-.term .ln.fresh{animation:lnIn .5s ease-out;}
-@keyframes lnIn{from{opacity:0; transform:translateY(-5px);}}
-.livedock:not(.paused) .livedot{box-shadow:0 0 10px var(--green);}
-.livedock.paused .livedot{box-shadow:0 0 10px var(--amber);}
-@media (prefers-reduced-motion: reduce){
-  #ambient{display:none;}
-  .fedge.lit{animation:none;}
-  .agent.live,.card.gate,.livedock.paused .followBtn{animation:none;}
-}
-footer{border-top:1px solid var(--line); padding:20px 14px 44px; text-align:center;
-  color:var(--dim); font-size:.8rem;}
-footer nav{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:8px;}
-@media (min-width:920px){
-  .tabs{display:none;}
-  .panel{display:block !important;}
-  .deskGrid{display:grid; grid-template-columns:minmax(340px,430px) 1fr; gap:12px; align-items:start;}
-  .deskGrid > div:first-child{position:sticky; top:var(--anchor,150px);}
-  .opsGrid{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start;}
-  .actionbar{justify-content:center;}
-  .actionbar .btn{flex:0 1 220px;}
-  .sheet{top:76px; bottom:auto; inset-inline-end:12px; inset-inline-start:auto; width:380px;
-    max-height:calc(100vh - 100px); border:1px solid var(--line2); border-radius:14px;}
-  .caseGrid{grid-template-columns:1fr 1fr;}
-}
-@media (max-width:559px){
-  .transport .btn{flex:1 1 100%;}
-  .decisionBox .btns .btn{flex:1 1 100%;}
-  .kv{grid-template-columns:96px 1fr;}
-}
-@media (prefers-reduced-motion: reduce){
-  *{animation:none !important; transition:none !important;}
-  html{scroll-behavior:auto;}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>HEAVEN — The Living Gateway</title>
+  <meta name="description" content="HEAVEN — Build the Place We Wish Existed. Cinematic interactive gateway.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#020306;--navy:#03061a;--ink:#eef6ff;--muted:#97a6c4;--cyan:#7fd4e8;--ice:#cfeefd;--gold:#f5c86e;--accentA:#3f8cff;--accentB:#ff9a3c}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#060818);color:var(--ink);font-family:Inter,system-ui,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
+    [dir="rtl"]{direction:rtl}
+    .page{min-height:100vh;display:flex;flex-direction:column}
+    header{position:sticky;top:0;z-index:80;padding:12px 18px;background:linear-gradient(180deg,rgba(3,6,12,0.5),rgba(3,6,12,0.2));backdrop-filter:blur(6px);display:flex;align-items:center;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:48px;height:48px}
+    .brand .title{font-weight:800;letter-spacing:0.12em;font-size:15px}
+    .slogan{color:var(--muted);font-size:13px}
+    .langWrap{margin-inline-start:auto;display:flex;gap:10px;align-items:center}
+    .btn{background:transparent;border:1px solid rgba(127,212,232,0.06);color:var(--ice);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .enter{background:linear-gradient(90deg,var(--cyan),#22b8d4);color:#021122;padding:10px 14px;border-radius:12px;font-weight:700;border:0}
+    main{display:flex;flex:1;align-items:center;justify-content:center;padding:28px}
+    .stage{width:100%;max-width:1180px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+    .canvasWrap{background:transparent;border-radius:14px;overflow:hidden;position:relative;min-height:64vh}
+    #overlayUI{position:absolute;z-index:50;inset:0;pointer-events:none}
+    .hud{position:absolute;left:18px;top:18px;pointer-events:auto}
+    .hud .metrics{display:flex;gap:8px;background:rgba(255,255,255,0.02);padding:8px;border-radius:10px;border:1px solid rgba(127,212,232,0.03)}
+    .metrics .m{padding:6px 10px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);font-size:13px}
+    .ctaGroup{position:absolute;right:18px;bottom:18px;pointer-events:auto}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:12px;padding:12px;border:1px solid rgba(127,212,232,0.03);max-height:70vh;overflow:auto}
+    .infoCol{display:flex;flex-direction:column;gap:12px}
+    .agentsList{display:flex;flex-direction:column;gap:8px}
+    .agentRow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;border:1px solid rgba(127,212,232,0.02);cursor:pointer}
+    .agentSwatch{width:12px;height:12px;border-radius:3px}
+    .small{font-size:13px;color:var(--muted)}
+    .titleH{font-weight:700;font-size:18px}
+    .demoControls{display:flex;gap:8px;margin-top:8px}
+    .log{background:rgba(0,0,0,0.3);padding:8px;border-radius:8px;color:var(--muted);font-size:13px;max-height:160px;overflow:auto}
+    @media(max-width:980px){.stage{grid-template-columns:1fr}.panel{position:relative;max-width:100%}}
+  </style>
 </head>
 <body>
-<canvas id="ambient" aria-hidden="true"></canvas>
-<header class="topbar" id="topbar">  <a class="sitelogo" href="index.html"><img src="assets/heaven-mark-transparent.png" alt="HEAVEN"><span>HEAVEN</span></a>
-  <span class="honest" data-i18n="honest"></span>
-  <div class="topbtns">
-    <button class="tbtn" id="langBtn">EN</button>
-    <button class="tbtn" id="sndBtn">🔊</button>
-  </div>
-</header>
-
-<div class="wrap">
-  <div class="livedock" id="dock">
-    <div class="liveRow">
-      <span class="livedot" id="dockDot"></span>
-      <span class="liveStage" id="dockStage"></span>
-      <span class="liveAgent" id="dockAgent"></span>
-      <button class="followBtn" id="followBtn"></button>
-    </div>
-    <button class="liveEvt" id="dockEvt"></button>
-  </div>
-  <div class="scenRow" id="scenRow" role="group" aria-label="scenarios"></div>
-
-  <div class="caseCard">
-    <h2><span data-i18n="caseT"></span><span class="sub" data-i18n="caseSub"></span></h2>
-    <div class="caseGrid">
-      <div><dl class="kv" id="caseKv"></dl></div>
-      <div id="caseSide"></div>
-    </div>
-    <div class="transport" id="transport"></div>
-  </div>
-
-  <div class="deskGrid">
-    <div>
-      <div class="flowWrap">
-        <h2 style="padding:4px 10px 0"><span data-i18n="flowT"></span><span class="sub" data-i18n="flowSub"></span></h2>
-        <svg id="flowSvg" role="img" aria-label="workflow"></svg>
-      </div>
-    </div>
-    <div>
-      <div class="tabs" role="tablist" id="tabs"></div>
-      <div class="opsGrid" id="opsGrid">
-        <div class="opsCol">
-          <div class="panel" data-panel="agents">
-            <div class="card"><h2><span data-i18n="agT"></span><span class="sub" data-i18n="agSub"></span></h2><div id="agentList"></div></div>
-            <div class="card"><h2><span data-i18n="revT"></span><span class="sub" data-i18n="revSub"></span></h2><div id="reviewBox"></div></div>
-            <div class="card"><h2><span data-i18n="folT"></span><span class="sub" data-i18n="folSub"></span></h2><div id="followBox"></div></div>
-          </div>
+  <div class="page">
+    <header>
+      <a class="brand" href="index.html" aria-label="HEAVEN home">
+        <img src="assets/heaven-mark-transparent.png" alt="HEAVEN">
+        <div>
+          <div class="title">HEAVEN</div>
+          <div class="slogan">Build the Place We Wish Existed.</div>
         </div>
-        <div class="opsCol">
-          <div class="panel" data-panel="data">
-            <div class="card"><h2><span data-i18n="resT"></span><span class="sub" data-i18n="resSub"></span></h2><div id="resList"></div></div>
-            <div class="card"><h2><span data-i18n="evT"></span><span class="sub" data-i18n="evSub"></span></h2><div class="term" id="term"></div></div>
-          </div>
-        </div>
+      </a>
+      <div class="langWrap">
+        <button id="langBtn" class="btn" aria-label="toggle language">English</button>
+        <a id="enterLink" class="enter" href="https://perchance.org/heaven-ai">دخول إلى HEAVEN</a>
       </div>
-    </div>
+    </header>
+
+    <main>
+      <section class="stage">
+        <div class="canvasWrap" id="canvasWrap">
+          <div id="overlayUI">
+            <div class="hud">
+              <div class="metrics" aria-hidden="false"><div class="m small">SIMULATION DATA</div><div class="m">NEEDS: <span id="mNeeds">—</span></div><div class="m">MATCHES: <span id="mMatches">—</span></div><div class="m">REVIEWS: <span id="mReviews">—</span></div><div class="m">CONFIRMED: <span id="mConfirmed">—</span></div></div>
+            </div>
+            <div class="ctaGroup">
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                <button id="demoOpen" class="btn">عـرض تـوضيحي — Demo</button>
+                <a class="enter" href="https://perchance.org/heaven-ai">Enter HEAVEN</a>
+              </div>
+            </div>
+          </div>
+          <div id="threeRoot" style="width:100%;height:100%;position:relative"></div>
+        </div>
+
+        <aside class="panel infoCol" aria-label="Inspector and agents">
+          <div>
+            <div class="titleH">Qutmir — Supervisory AI</div>
+            <div class="small">Distinctive supervisory identity derived from the HEAVEN gateway accent. Click agents or nodes in the visual to inspect.</div>
+          </div>
+
+          <div>
+            <div class="titleH">Agent Workforce</div>
+            <div class="agentsList" id="agentsList"></div>
+          </div>
+
+          <div>
+            <div class="titleH">Simulation Controls</div>
+            <div class="demoControls">
+              <button id="simStart" class="btn">Start</button>
+              <button id="simPause" class="btn">Pause</button>
+              <button id="simStep" class="btn">Step</button>
+              <button id="simReset" class="btn">Reset</button>
+            </div>
+            <div class="log" id="eventLog" aria-live="polite"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <footer style="padding:18px;text-align:center;color:var(--muted)">
+      Verified link: <a href="https://perchance.org/heaven-ai">Open HEAVEN platform</a> — Arabic-first. All demonstration data is fictional.
+    </footer>
   </div>
-</div>
 
-<div class="sheet" id="sheet" hidden>
-  <button class="tbtn x" id="sheetX">✕</button>
-  <h3 id="sheetTitle"></h3>
-  <div id="sheetBody"></div>
-</div>
+  <script src="https://unpkg.com/three@0.154.0/build/three.min.js"></script>
+  <script>
+  // Implementation notes: cinematic central sculpture (approximated morph), agent nodes, particle handoffs.
+  (function(){
+    // configuration
+    const ROOT = document.getElementById('threeRoot');
+    const W = ROOT.clientWidth, H = Math.max(window.innerHeight*0.66, 560);
+    ROOT.style.height = H + 'px';
 
-<div class="actionbar" id="actionbar">
-  <button class="btn primary" id="mStep"></button>
-  <button class="btn" id="mAuto"></button>
-</div>
+    // scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, ROOT.clientWidth/ROOT.clientHeight, 0.1, 2000);
+    camera.position.set(0, 0, 420);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setSize(ROOT.clientWidth, ROOT.clientHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    ROOT.appendChild(renderer.domElement);
 
-<footer>
-  <nav>
-    <a href="index.html" data-i18n="fHome"></a>
-    <a href="https://perchance.org/heaven-ai" data-i18n="fApp"></a>
-  </nav>
-  <div data-i18n="fNote"></div>
-</footer>
+    // lighting
+    const amb = new THREE.AmbientLight(0xffffff, 0.06);
+    scene.add(amb);
+    const key = new THREE.PointLight(0x7fd4e8, 1.2, 1400, 2);
+    key.position.set(200,200,300); scene.add(key);
+    const rim = new THREE.PointLight(0xff9a3c, 0.6, 800, 2); rim.position.set(-200,-160,220); scene.add(rim);
 
-<script>
-/* HEAVEN Ops — deterministic client-side simulation engine (DOM-free).
-   7 agents + orchestrator. All data fictional demonstration data.
-   Usage: const sim = createSim(seed); sim.on(e=>...); sim.startCase('full'); ... */
-function mulberry32(a) {
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+    // central sculpture: base icosahedron with high subdivision to allow smooth displacement
+    const baseGeom = new THREE.IcosahedronGeometry(120, 5); // ~ many vertices
+    // create a copy of original positions
+    const posBase = baseGeom.attributes.position.array.slice();
 
-const AGENTS = [
-  { id: "intake",  color: 0x7fd4e8, ar: "وكيل الاستقبال",        en: "Intake Agent" },
-  { id: "verify",  color: 0xb48cff, ar: "وكيل التحقق والسياق",    en: "Context & Verification" },
-  { id: "discover",color: 0x3f8cff, ar: "وكيل اكتشاف الموارد",    en: "Resource Discovery" },
-  { id: "match",   color: 0x53e0c8, ar: "وكيل المطابقة والتقييم", en: "Matching & Evaluation" },
-  { id: "coord",   color: 0xf5c86e, ar: "وكيل التنسيق",           en: "Coordination" },
-  { id: "human",   color: 0xff9a3c, ar: "بوابة الإشراف البشري",   en: "Human Oversight" },
-  { id: "follow",  color: 0x4ade80, ar: "وكيل المتابعة والنتائج", en: "Follow-up & Outcomes" },
-];
-
-const RESOURCES = [
-  { id: "kitchen", ar: "مطبخ المجتمع — الرياض", en: "Community Kitchen — Riyadh",
-    attrs: { daily: true, distKm: 6, lang: "ar", needsId: false, slots: 14, days: "daily" } },
-  { id: "van", ar: "شاحنة بنك الطعام", en: "Food Bank Van",
-    attrs: { daily: false, distKm: 12, lang: "ar", needsId: false, slots: 8, days: "tue-thu" } },
-  { id: "voucher", ar: "قسائم البقالة التجريبية", en: "Grocery Voucher Pilot",
-    attrs: { daily: true, distKm: 4, lang: "en", needsId: true, slots: 2, days: "daily" } },
-  { id: "pantry", ar: "مخزن الحي الشمالي", en: "North District Pantry",
-    attrs: { daily: false, distKm: 18, lang: "ar", needsId: true, slots: 5, days: "weekly" } },
-];
-
-const NEED = { category: "food-temp", city: "Riyadh", lang: "ar", needsDaily: true,
-  hasId: false, maxDistKm: 10, duration: "1week", priority: "gentle-urgent" };
-
-function evalCriteria(res) {
-  const a = res.attrs, out = [];
-  out.push({ key: "daily", pass: !NEED.needsDaily || a.daily,
-    ar: "توفر يومي", en: "daily availability" });
-  out.push({ key: "dist", pass: a.distKm <= NEED.maxDistKm,
-    ar: "المسافة " + a.distKm + " كم (الحد " + NEED.maxDistKm + ")", en: "distance " + a.distKm + " km (limit " + NEED.maxDistKm + ")" });
-  out.push({ key: "lang", pass: a.lang === NEED.lang,
-    ar: "اللغة: " + (a.lang === "ar" ? "العربية" : "الإنجليزية"), en: "language: " + (a.lang === "ar" ? "Arabic" : "English") });
-  out.push({ key: "id", pass: !a.needsId || NEED.hasId,
-    ar: a.needsId ? "يتطلب هوية (غير متوفرة)" : "لا يتطلب هوية", en: a.needsId ? "ID required (not available)" : "no ID required" });
-  out.push({ key: "slots", pass: a.slots > 0,
-    ar: "السعة: " + a.slots, en: "capacity: " + a.slots });
-  const fails = out.filter(c => !c.pass).length;
-  return { criteria: out, viable: fails === 0, fails };
-}
-
-function createSim(seed) {
-  const rng = mulberry32(seed == null ? 20261013 : seed);
-  const listeners = [];
-  const RES = RESOURCES.map(r => ({ ...r, attrs: { ...r.attrs } })); // per-instance copy: capacity evolves locally
-  const S = {
-    seed, tick: 0, seq: 0,
-    phase: "idle",           // idle|intake|clarify|verify|discover|match|coordinate|review|family|follow|outcome
-    caseOpen: false,
-    structured: null, gaps: [],
-    searchResults: [],       // [{resId, viable, fails, criteria}]
-    shortlist: [],
-    proposed: null,          // resId
-    reviewDecision: null,
-    familyAccepted: null,
-    outcome: null,           // confirmed|awaiting|closed-unconfirmed|declined|no-match|escalated
-    outcomeNote: null,
-    escalated: false,
-    agents: {},              // id -> {state, taskAr, taskEn}
-    tasks: [],               // orch queue [{id, owner, label, state}]
-    exceptions: [],
-  };
-  AGENTS.forEach(a => { S.agents[a.id] = { state: "idle", taskAr: "—", taskEn: "—" }; });
-
-  function emit(kind, agentId, ar, en, data) {
-    S.seq++; S.tick++;
-    const e = { seq: S.seq, tick: S.tick, kind, agent: agentId, ar, en, data: data || null };
-    listeners.forEach(f => { try { f(e); } catch (_) {} });
-    return e;
-  }
-  function setAgent(id, state, taskAr, taskEn) {
-    S.agents[id] = { state, taskAr: taskAr || S.agents[id].taskAr, taskEn: taskEn || S.agents[id].taskEn };
-    emit("agent", id, taskAr || "", taskEn || "", { state });
-  }
-  function handoff(from, to, ar, en) {
-    emit("handoff", from, ar, en, { from, to });
-  }
-  function queueTask(id, owner, ar, en) {
-    S.tasks.push({ id, owner, ar, en, state: "queued" });
-    emit("task", owner, "مهمة في الطابور: " + ar, "task queued: " + en, { task: id, state: "queued" });
-  }
-  function runTask(id, st) {
-    const t = S.tasks.find(x => x.id === id);
-    if (t) { t.state = st; emit("task", t.owner, "مهمة " + t.ar + ": " + st, "task " + t.en + ": " + st, { task: id, state: st }); }
-  }
-  function need(cond, ar, en) {
-    if (!cond) return { error: en };
-    return null;
-  }
-
-  const api = {
-    on(f) { listeners.push(f); return api; },
-    snapshot() { return JSON.parse(JSON.stringify({ ...S, rngState: undefined })); },
-    agents: AGENTS, resources: RES,
-
-    reset(newSeed) {
-      const fresh = createSim(newSeed == null ? S.seed : newSeed);
-      Object.keys(fresh).forEach(k => { if (k !== "on") api[k] = fresh[k]; });
-      // rebind methods kept on api; copy state over
-      const st = fresh.snapshot();
-      Object.keys(st).forEach(k => { S[k] = st[k]; });
-      S.seed = st.seed;
-      emit("system", null, "أُعيد تشغيل السيناريو (بذرة " + S.seed + ")", "scenario restarted (seed " + S.seed + ")", { seed: S.seed });
-      return api;
-    },
-
-    startCase(mode) {
-      const bad = need(S.phase === "idle", "لا يمكن البدء الآن", "cannot start now");
-      if (bad) return bad;
-      S.phase = "intake"; S.caseOpen = true;
-      setAgent("intake", "working", "يستقبل رسالة الأسرة ويستخرج التفاصيل", "receiving the family message, extracting details");
-      emit("case", "intake", "طلب جديد: أسرة في الرياض تحتاج مساعدة غذائية مؤقتة", "new request: Riyadh household needs temporary food assistance", { mode });
-      queueTask("structure", "intake", "هيكلة الطلب", "structure request");
-      if (mode === "incomplete") {
-        S.gaps = ["city", "duration"];
-        S.phase = "clarify";
-        runTask("structure", "needs-info");
-        setAgent("intake", "done", "اكتمل الاستقبال الأولي", "initial intake done");
-        setAgent("verify", "working", "رصد نواقص: المدينة والمدة", "found gaps: city and duration");
-        handoff("intake", "verify", "الطلب إلى التحقق", "request to verification");
-        emit("clarify", "verify", "معلومات ناقصة (المدينة، المدة) — أُعيد للتوضيح بدل التخمين", "missing info (city, duration) — returned for clarification instead of guessing", { gaps: S.gaps });
-      } else {
-        S.structured = { ...NEED };
-        S.phase = "verify";
-        runTask("structure", "done");
-        setAgent("intake", "done", "اكتملت الهيكلة", "structuring complete");
-        handoff("intake", "verify", "طلب مهيكل إلى التحقق", "structured request to verification");
-        emit("structured", "verify", "طلب مهيكل: غذاء مؤقت · الرياض · العربية · أسبوع", "structured: temp food · Riyadh · Arabic · 1 week", {});
-      }
-      return { ok: true };
-    },
-
-    completeDetails() {
-      const bad = need(S.phase === "clarify", "لا يوجد توضيح معلق", "no pending clarification");
-      if (bad) return bad;
-      S.gaps = []; S.structured = { ...NEED }; S.phase = "verify";
-      setAgent("verify", "working", "اكتملت التفاصيل — بدء التحقق", "details complete — verifying");
-      emit("structured", "verify", "اكتملت التفاصيل: الرياض · أسبوع واحد", "details complete: Riyadh · one week", {});
-      return { ok: true };
-    },
-
-    runDiscovery() {
-      const bad = need(S.phase === "verify", "الاكتشاف متاح بعد التحقق", "discovery runs after verification");
-      if (bad) return bad;
-      S.phase = "discover";
-      setAgent("verify", "done", "اكتمل التحقق (تقليل البيانات الزائدة)", "verification complete (data minimized)");
-      setAgent("discover", "working", "يبحث في الدليل ويقيّم المرشحين", "searching directory, evaluating candidates");
-      queueTask("search", "discover", "بحث الدليل", "directory search");
-      handoff("verify", "discover", "طلب متحقق إلى الاكتشاف", "verified request to discovery");
-      // deterministic order, seeded jitter only affects display order tie-breaks
-      const order = RES.map(r => r.id);
-      S.searchResults = order.map(id => {
-        const r = RES.find(x => x.id === id);
-        const ev = evalCriteria(r);
-        return { resId: id, viable: ev.viable, fails: ev.fails, criteria: ev.criteria };
-      });
-      S.searchResults.forEach(sr => {
-        const r = RESOURCES.find(x => x.id === sr.resId);
-        emit("search", "discover",
-          "فحص " + r.ar + ": " + (sr.viable ? "مرشح صالح" : "مرفوض (" + sr.fails + " معايير)") ,
-          "checked " + r.en + ": " + (sr.viable ? "viable" : "rejected (" + sr.fails + " criteria)"),
-          { res: sr.resId, viable: sr.viable, criteria: sr.criteria });
-      });
-      runTask("search", "done");
-      setAgent("discover", "done", "اكتمل الفحص", "screening complete");
-      S.shortlist = S.searchResults.filter(s => s.viable).map(s => s.resId);
-      S.phase = "match";
-      setAgent("match", "working", "يقارن المرشحين بالمعايير الصريحة", "comparing candidates on explicit criteria");
-      handoff("discover", "match", "نتائج الفحص إلى المطابقة", "screening results to matching");
-      emit("match", "match", "القائمة المختصرة: " + (S.shortlist.length ? S.shortlist.map(id => RES.find(x => x.id === id).ar).join("، ") : "لا يوجد"),
-        "shortlist: " + (S.shortlist.length ? S.shortlist.map(id => RES.find(x => x.id === id).en).join(", ") : "none"), { shortlist: S.shortlist });
-      return { ok: true, shortlist: S.shortlist };
-    },
-
-    propose(resId) {
-      const bad = need(S.phase === "match" && S.shortlist.includes(resId), "مرشح غير صالح", "not a valid candidate");
-      if (bad) return bad;
-      S.proposed = resId; S.phase = "coordinate";
-      const r = RES.find(x => x.id === resId);
-      setAgent("match", "done", "اكتملت المقارنة المسببة", "reasoned comparison complete");
-      setAgent("coord", "working", "يجهز الإحالة المقترحة ويفحص التكرار", "preparing proposed referral, checking duplicates");
-      queueTask("referral", "coord", "تجهيز الإحالة", "prepare referral");
-      handoff("match", "coord", "المرشح المختار إلى التنسيق", "chosen candidate to coordination");
-      emit("propose", "coord", "الإحالة المقترحة: " + r.ar, "proposed referral: " + r.en, { res: resId });
-      // move to human gate
-      S.phase = "review";
-      runTask("referral", "waiting");
-      setAgent("coord", "done", "الإحالة جاهزة للمراجعة", "referral ready for review");
-      setAgent("human", "waiting", "قرار بشري مطلوب — ليس تلقائياً", "human decision required — not automatic");
-      queueTask("decision", "human", "قرار المراجعة", "review decision");
-      handoff("coord", "human", "الإحالة إلى البوابة البشرية", "referral to human gateway");
-      emit("review", "human", "توقفت الإحالة عند البوابة: موافقة؟ رفض؟ توضيح؟", "referral paused at gateway: approve? decline? clarify?", { res: resId });
-      return { ok: true };
-    },
-
-    declareNoFit() {
-      const bad = need(S.phase === "match", "لا يوجد تقييم معروض", "no evaluation on screen");
-      if (bad) return bad;
-      S.phase = "outcome"; S.outcome = "no-match";
-      S.outcomeNote = "لا يفي أي مورد بالمتطلبات المعلنة";
-      setAgent("match", "done", "سُجل عدم التطابق بصدق", "no-match recorded honestly");
-      emit("nomatch", "match", "لا تطابق مناسب — سُجل ذلك بدل اختراع تطابق", "no suitable match — recorded instead of inventing one", {});
-      return { ok: true };
-    },
-
-    retrySearch() {
-      const bad = need(S.phase === "outcome" && S.outcome === "no-match", "إعادة البحث بعد عدم التطابق فقط", "retry only after no-match");
-      if (bad) return bad;
-      S.outcome = null; S.phase = "verify";
-      emit("retry", "discover", "إعادة البحث في الدليل (نفس المعايير)", "searching directory again (same criteria)", {});
-      return { ok: true };
-    },
-
-    escalate() {
-      const bad = need(S.phase === "outcome" && S.outcome === "no-match", "التصعيد بعد عدم التطابق فقط", "escalate only after no-match");
-      if (bad) return bad;
-      S.outcome = "escalated"; S.escalated = true;
-      S.exceptions.push({ kind: "no-match-escalated", ar: "حالة بلا تطابق بانتظار منسق بشري", en: "no-match case awaiting human coordinator" });
-      emit("exception", "coord", "صُعدت الحالة إلى منسق بشري — تبقى ظاهرة كمهمة معلقة", "case escalated to human coordinator — stays visible as outstanding", {});
-      return { ok: true };
-    },
-
-    reviewDecision(d) {
-      const bad = need(S.phase === "review" && ["approve", "decline", "clarify"].includes(d), "لا يوجد قرار معلق", "no pending decision");
-      if (bad) return bad;
-      S.reviewDecision = d;
-      if (d === "approve") {
-        S.phase = "family";
-        runTask("decision", "done");
-        setAgent("human", "done", "سُجلت الموافقة بسبب مسجل", "approval recorded with reason");
-        setAgent("coord", "working", "يبلغ الأسرة — القرار لها", "notifying family — decision is theirs");
-        handoff("human", "coord", "الموافقة إلى التنسيق", "approval to coordination");
-        emit("approved", "human", "اعتمدت البوابة الإحالة — تُعرض على الأسرة", "gateway approved referral — offered to family", { res: S.proposed });
-      } else if (d === "decline") {
-        S.phase = "outcome"; S.outcome = "declined";
-        S.outcomeNote = "رفضت البوابة الإحالة المقترحة";
-        runTask("decision", "done");
-        setAgent("human", "done", "سُجل الرفض بسبب", "rejection recorded with reason");
-        emit("gateway-decline", "human", "رفضت البوابة الإحالة — تُغلق دون إحالة", "gateway declined referral — closed without referral", {});
-      } else {
-        S.phase = "match";
-        runTask("decision", "needs-info");
-        setAgent("human", "working", "طلب توضيحاً — عودة للمقارنة", "requested clarification — back to matching");
-        handoff("human", "match", "طلب التوضيح إلى المطابقة", "clarification request to matching");
-        emit("gateway-clarify", "human", "طلبت البوابة تعديلاً — عادت الحالة للمقارنة", "gateway requested changes — case returned to matching", {});
-      }
-      return { ok: true };
-    },
-
-    familySay(accept) {
-      const bad = need(S.phase === "family", "لا توجد إحالة معروضة", "no referral on screen");
-      if (bad) return bad;
-      S.familyAccepted = !!accept;
-      if (!accept) {
-        S.phase = "outcome"; S.outcome = "declined"; S.outcomeNote = "رفضت الأسرة الإحالة — حقها";
-        setAgent("coord", "done", "سُجل رفض الأسرة", "family decline recorded");
-        emit("family-decline", "coord", "رفضت الأسرة الإحالة — تُغلق دون إحالة وتبقى قابلة لإعادة الفتح", "family declined — closed without referral, can reopen", {});
-      } else {
-        S.phase = "follow";
-        setAgent("coord", "done", "قبلت الأسرة — إلى المتابعة", "family accepted — to follow-up");
-        setAgent("follow", "working", "يتتبع الإحالة ويسأل عن الواقع", "tracking referral, asking what happened");
-        queueTask("followup", "follow", "متابعة الإحالة", "referral follow-up");
-        handoff("coord", "follow", "الإحالة المقبولة إلى المتابعة", "accepted referral to follow-up");
-        emit("accepted", "follow", "قبلت الأسرة الإحالة — بدأت المتابعة (ليست نتيجة بعد)", "family accepted — follow-up started (not an outcome yet)", { res: S.proposed });
-      }
-      return { ok: true };
-    },
-
-    followup(result) {
-      const bad = need(S.phase === "follow" && ["delivered", "noanswer", "skip"].includes(result), "لا توجد متابعة معلقة", "no pending follow-up");
-      if (bad) return bad;
-      S.phase = "outcome";
-      runTask("followup", "done");
-      if (result === "delivered") {
-        S.outcome = "confirmed";
-        const r = RES.find(x => x.id === S.proposed);
-        if (r && r.attrs.slots > 0) r.attrs.slots--;
-        setAgent("follow", "done", "تأكيد مسجل بدليل", "confirmation recorded with evidence");
-        emit("confirmed", "follow", "سُجل تأكيد الاستلام بدليل — فقط الآن نتيجة مؤكدة", "receipt confirmed with evidence — only now a confirmed outcome", { res: S.proposed });
-      } else if (result === "noanswer") {
-        S.outcome = "awaiting";
-        S.outcomeNote = "لا رد — بانتظار التأكيد";
-        setAgent("follow", "waiting", "لا رد — تبقى معلقة", "no answer — stays outstanding");
-        emit("awaiting", "follow", "لا نعرف بعد — الحالة «بانتظار التأكيد»", "unknown yet — status stays awaiting confirmation", {});
-      } else {
-        S.outcome = "closed-unconfirmed";
-        S.outcomeNote = "تخطينا المتابعة — أُغلقت دون تأكيد";
-        setAgent("follow", "done", "أُغلقت دون تأكيد بشفافية", "closed unconfirmed, transparently");
-        emit("closed-unconfirmed", "follow", "أُغلقت الحالة دون تأكيد — مسجلة بشفافية", "case closed unconfirmed — recorded transparently", {});
-      }
-      return { ok: true };
-    },
-  };
-  return api;
-}
-
-if (typeof module !== "undefined" && module.exports) { module.exports = { createSim, AGENTS, RESOURCES, NEED, evalCriteria }; }
-
-</script>
-<script>
-/* HEAVEN Ops v2 — living SVG workflow graph. No decoration: every mark = state. */
-const FLOW = (() => {
-  const NS = "http://www.w3.org/2000/svg";
-  // node layout: [key, x(center), y(center)]
-  const NODES = [
-    ["request", 180, 34], ["intake", 180, 98], ["context", 180, 162],
-    ["discovery", 180, 226], ["match", 180, 290], ["review", 180, 354],
-    ["referral", 180, 418], ["follow", 180, 482], ["outcome", 180, 546],
-    ["esc", 378, 290],
-  ];
-  const W = 460, H = 596, NW = 232, NH = 46;
-  // edges: [id, from, to, path]
-  function vpath(a, b) {
-    const A = pos(a), B = pos(b);
-    return "M" + A.x + " " + (A.y + NH / 2) + " L" + B.x + " " + (B.y - NH / 2);
-  }
-  function pos(k) { const n = NODES.find(n => n[0] === k); return { x: n[1], y: n[2] }; }
-  const EDGES = [];
-  let svg = null, selCb = null, selected = null;
-  const nodeEls = {}, edgeEls = {};
-  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // live packets
-  let packets = [], rafOn = false, lastT = 0;
-  function el(name, attrs, parent) {
-    const e = document.createElementNS(NS, name);
-    for (const k in attrs) e.setAttribute(k, attrs[k]);
-    (parent || svg).appendChild(e);
-    return e;
-  }
-  function build(svgEl) {
-    svg = svgEl;
-    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-    svg.innerHTML = "";
-    // main chain edges
-    const chain = ["request", "intake", "context", "discovery", "match", "review", "referral", "follow", "outcome"];
-    for (let i = 0; i < chain.length - 1; i++) addEdge("e" + i, chain[i], chain[i + 1], vpath(chain[i], chain[i + 1]));
-    // branch: match -> escalation
-    addEdge("e-esc", "match", "esc", "M292 290 L302 290");
-    // clarify loop: context -> intake (left curve)
-    addEdge("e-loop", "context", "intake", "M68 146 C40 130 40 114 68 98");
-    EDGES.length = 0;
-    ["e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e-esc", "e-loop"].forEach(id => EDGES.push(id));
-    // nodes
-    NODES.forEach(n => {
-      const g = el("g", { "class": "fnode waiting", transform: "translate(" + (n[1] - NW / 2) + "," + (n[2] - NH / 2) + ")", "data-node": n[0] });
-      el("rect", { width: NW, height: NH, rx: 9 }, g);
-      el("rect", { "class": "halo", x: -5, y: -5, width: NW + 10, height: NH + 10, rx: 13 }, g);
-      el("circle", { "class": "dot", cx: 16, cy: NH / 2, r: 5, fill: "#626d8c" }, g);
-      const t1 = el("text", { x: 30, y: 20 }, g); t1.textContent = n[0];
-      const t2 = el("text", { "class": "st", x: 30, y: 37, fill: "#626d8c" }, g); t2.textContent = "";
-      g.addEventListener("click", () => { if (selCb) selCb(n[0]); });
-      nodeEls[n[0]] = { g, t1, t2 };
-    });
-    // esc node narrower label reuse same width (fine)
-  }
-  function addEdge(id, a, b, d) {
-    const p = el("path", { "class": "fedge dim", d, id: "fe-" + id });
-    edgeEls[id] = p;
-  }
-  function render(states, litEdges, loopOn) {
-    // states: {nodeKey: {status, label, sub}}
-    Object.keys(nodeEls).forEach(k => {
-      const st = states[k] || { status: "waiting", label: k, sub: "" };
-      const N = nodeEls[k];
-      N.g.setAttribute("class", "fnode " + st.status + (selected === k ? " sel" : ""));
-      N.t1.textContent = st.label;
-      N.t2.textContent = st.sub || "";
-      const dot = N.g.querySelector(".dot");
-      dot.setAttribute("fill", st.status === "active" ? "#7fd4e8" : st.status === "done" ? "#4ade80" :
-        st.status === "blocked" || st.status === "human" ? "#ff9a3c" : st.status === "failed" ? "#f87171" : "#626d8c");
-    });
-    EDGES.forEach(id => {
-      const p = edgeEls[id];
-      if (!p) return;
-      p.setAttribute("class", "fedge " + (litEdges && litEdges.has(id) ? "lit" : "dim"));
-    });
-    if (edgeEls["e-loop"]) edgeEls["e-loop"].setAttribute("class", "fedge " + (loopOn ? "lit" : "dim"));
-  }
-  function edgePath(id) {
-    const p = edgeEls[id];
-    return p && p.getTotalLength ? { len: p.getTotalLength(), el: p } : null;
-  }
-  function edgeFor(a, b) {
-    // find edge id connecting a->b
-    const chain = ["request", "intake", "context", "discovery", "match", "review", "referral", "follow", "outcome"];
-    const i = chain.indexOf(a), j = chain.indexOf(b);
-    if (i >= 0 && j === i + 1) return "e" + i;
-    if (a === "match" && b === "esc") return "e-esc";
-    if (a === "context" && b === "intake") return "e-loop";
-    return null;
-  }
-  function handoff(a, b, color) {
-    if (reduced()) return;
-    const id = edgeFor(a, b);
-    if (!id) return;
-    const info = edgePath(id);
-    if (!info) return;
-    const c = el("circle", { "class": "fpacket", r: 4, fill: color || "#fff" });
-    packets.push({ c, info, t: 0 });
-    if (!rafOn) { rafOn = true; lastT = performance.now(); requestAnimationFrame(tick); }
-  }
-  function tick(now) {
-    const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
-    packets.forEach(p => { p.t += dt / 0.9; });
-    packets = packets.filter(p => {
-      if (p.t >= 1) { p.c.remove(); return false; }
-      const pt = p.info.el.getPointAtLength(p.t * p.info.len);
-      p.c.setAttribute("cx", pt.x); p.c.setAttribute("cy", pt.y);
-      p.c.setAttribute("opacity", 1 - p.t * 0.3);
-      return true;
-    });
-    if (packets.length) requestAnimationFrame(tick);
-    else rafOn = false;
-  }
-  return {
-    build, render, handoff,
-    onSelect(cb) { selCb = cb; },
-    setSelected(k) { selected = k; },
-  };
-})();
-
-</script>
-<script>
-/* HEAVEN Ops v2 UI: case workspace, scenarios, workforce, inspector. */
-const T = {
-ar: {
-  honest: "HEAVEN INTERACTIVE SIMULATION · FICTIONAL DATA — محاكاة تفاعلية · بيانات خيالية",
-  fHome: "الرئيسية", fApp: "المنصة",
-  fNote: "روابط موثقة فقط. المحاكاة معزولة عن منصة الإنتاج والطلبات الحقيقية.",
-  caseT: "غرفة الحالة", caseSub: "تابع حالة واحدة من الاستقبال إلى النتيجة",
-  kNeed: "الحاجة", kCons: "القيود", kStage: "المرحلة", kAgent: "الوكيل النشط",
-  kBlock: "العوائق", kDec: "قرار معلق", kRef: "الإحالة", kOut: "النتيجة",
-  needLine: "مساعدة غذائية مؤقتة — أسرة في الرياض",
-  consLine: "يومية · ضمن 10 كم · بالعربية · دون هوية · لمدة أسبوع",
-  none: "لا يوجد", awaiting: "بانتظار بدء حالة",
-  step: "خطوة", auto: "تلقائي", pause: "إيقاف مؤقت", restart: "من جديد", replay: "إعادة التشغيل",
-  scenT: "السيناريوهات",
-  scenarios: [
-    ["نجاح كامل", "اكتشاف ثم إحالة مؤكدة"],
-    ["معلومات ناقصة", "توضيح ثم نتيجة معلقة"],
-    ["لا تطابق", "بحث متكرر ثم تصعيد"],
-    ["رفض التوصية", "البوابة ترفض الإحالة"],
-  ],
-  flowT: "مسار سير العمل", flowSub: "انقر أي مرحلة لفحصها",
-  stages: {
-    request: ["استلام الطلب", ""], intake: ["الاستقبال", ""], context: ["فحص السياق", ""],
-    discovery: ["اكتشاف الموارد", ""], match: ["تقييم المطابقة", ""], review: ["مراجعة بشرية", ""],
-    referral: ["الإحالة", ""], follow: ["المتابعة", ""], outcome: ["النتيجة", ""], esc: ["تصعيد", ""],
-  },
-  stW: { waiting: "بانتظار", active: "نشطة", done: "اكتملت", blocked: "معلقة", failed: "فشلت", human: "بشري" },
-  agT: "فريق الوكلاء", agSub: "سبعة مكونات محاكاة — تنشط حسب سير العمل",
-  revT: "المراجعة البشرية", revSub: "التوصية والأدلة والقرار",
-  folT: "المتابعة", folSub: "الجدول الزمني للإحالة",
-  resT: "الموارد والمطابقة", resSub: "الدليل الخيالي — معايير صريحة",
-  evT: "سجل الأحداث", evSub: "من أحداث المحاكاة فعلاً — بالترتيب",
-  tabs: ["الفريق", "الموارد", "الأحداث"],
-  roles: ["يستقبل الطلب ويهيكله", "يتحقق ويقلص البيانات الزائدة", "يبحث الدليل ويقيّم", "يقارن ويرتب المرشحين", "يجهز الإحالة ويتتبعها", "يعلّق القرارات بانتظار البشر", "يتتبع النتائج بالأدلة"],
-  stWords: { idle: "خامل", working: "يعمل", waiting: "بانتظار البشر", done: "أنجز" },
-  lastDone: "آخر إنجاز", noEvents: "لا أحداث بعد",
-  viable: "صالح", rejected: "مرفوض", proposedTag: "مقترح", referredTag: "محال",
-  noRes: "لا نتائج بعد — شغّل الاكتشاف عبر الخطوات",
-  evd: "الأدلة", unc: "غير المؤكد", decide: "القرار",
-  bApprove: "اعتماد", bDecline: "رفض", bClar: "طلب توضيح",
-  outNames: { confirmed: "مؤكدة", awaiting: "بانتظار التأكيد", "closed-unconfirmed": "مغلقة دون تأكيد", declined: "مغلقة دون إحالة", "no-match": "لا تطابق", escalated: "صُعدت إلى بشري" },
-  insp: { trigger: "المحفز", agent: "الوكيل", input: "المدخل", action: "الإجراء", output: "المخرج", why: "لماذا", next: "التالي" },
-  inspRes: { dist: "المسافة (كم)", lang: "اللغة", slots: "السعة", days: "الأيام", crit: "معيار" },
-  close: "إغلاق",
-  followOn: "متابعة", followOff: "استئناف", liveNow: "الآن",
-},
-en: {
-  honest: "HEAVEN INTERACTIVE SIMULATION · FICTIONAL DATA",
-  fHome: "Home", fApp: "Platform",
-  fNote: "Verified links only. Simulation isolated from production and real requests.",
-  caseT: "Case room", caseSub: "Follow one case from intake to outcome",
-  kNeed: "Need", kCons: "Constraints", kStage: "Stage", kAgent: "Active agent",
-  kBlock: "Blockers", kDec: "Pending decision", kRef: "Referral", kOut: "Outcome",
-  needLine: "Temporary food assistance — Riyadh household",
-  consLine: "daily · nearby (≤10 km) · Arabic · no ID · one week",
-  none: "none", awaiting: "Awaiting a case",
-  step: "Step", auto: "Auto", pause: "Pause", restart: "Restart", replay: "Replay",
-  scenT: "Scenarios",
-  scenarios: [
-    ["Full success", "Discovery then confirmed referral"],
-    ["Missing info", "Clarification then outstanding"],
-    ["No match", "Repeated search then escalation"],
-    ["Declined advice", "Gateway rejects referral"],
-  ],
-  flowT: "Workflow path", flowSub: "Click any stage to inspect it",
-  stages: {
-    request: ["Request", ""], intake: ["Intake", ""], context: ["Context check", ""],
-    discovery: ["Discovery", ""], match: ["Match review", ""], review: ["Human review", ""],
-    referral: ["Referral", ""], follow: ["Follow-up", ""], outcome: ["Outcome", ""], esc: ["Escalation", ""],
-  },
-  stW: { waiting: "waiting", active: "active", done: "done", blocked: "blocked", failed: "failed", human: "human" },
-  agT: "Agent workforce", agSub: "Seven simulated components — activate per workflow",
-  revT: "Human review", revSub: "Recommendation, evidence, decision",
-  folT: "Follow-up", folSub: "Referral timeline",
-  resT: "Resources & matching", resSub: "Fictional directory — explicit criteria",
-  evT: "Event stream", evSub: "From actual simulation events — in order",
-  tabs: ["Workforce", "Resources", "Events"],
-  roles: ["Receives and structures", "Verifies, minimizes data", "Searches and scores", "Compares and ranks", "Prepares and tracks", "Pauses for humans", "Tracks evidence-based outcomes"],
-  stWords: { idle: "IDLE", working: "WORKING", waiting: "AWAITING HUMAN", done: "DONE" },
-  lastDone: "Last completed", noEvents: "No events yet",
-  viable: "viable", rejected: "rejected", proposedTag: "proposed", referredTag: "referred",
-  noRes: "No results yet — advance the steps",
-  evd: "Evidence", unc: "Uncertain", decide: "Decision",
-  bApprove: "Approve", bDecline: "Decline", bClar: "Request clarification",
-  outNames: { confirmed: "Confirmed", awaiting: "Awaiting confirmation", "closed-unconfirmed": "Closed unconfirmed", declined: "Closed w/o referral", "no-match": "No match", escalated: "Escalated" },
-  insp: { trigger: "Trigger", agent: "Agent", input: "Input", action: "Action", output: "Output", why: "Why", next: "Next" },
-  inspRes: { dist: "distance (km)", lang: "language", slots: "capacity", days: "days", crit: "criterion" },
-  close: "Close",
-  followOn: "Follow", followOff: "Resume", liveNow: "Now",
-}};
-let lang = "ar";
-let sim = null, evts = [];
-let scenIdx = 0, ptr = 0, autoOn = false, autoTimer = 0;
-let selected = null;
-const SEED = 20261013;
-const $ = id => document.getElementById(id);
-const t = () => T[lang];
-
-/* sound: minimal */
-let AC = null, soundOn = true;
-function tone(f, d) {
-  if (!AC || !soundOn) return;
-  try {
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.type = "sine"; o.frequency.value = f;
-    const t0 = AC.currentTime;
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
-    o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + d + 0.05);
-  } catch (e) {}
-}
-function audioInit() {
-  if (AC) { if (AC.state === "suspended") AC.resume(); return; }
-  try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; }
-}
-document.addEventListener("pointerdown", audioInit);
-
-/* ---------- scenarios as action scripts ---------- */
-const SCRIPTS = [
-  [ ["startCase", "full"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "approve"], ["familySay", true], ["followup", "delivered"] ],
-  [ ["startCase", "incomplete"], ["completeDetails"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "approve"], ["familySay", true], ["followup", "noanswer"] ],
-  [ ["startCase", "full"], ["runDiscovery"], ["declareNoFit"], ["retrySearch"], ["runDiscovery"], ["declareNoFit"], ["escalate"] ],
-  [ ["startCase", "full"], ["runDiscovery"], ["propose", "kitchen"], ["reviewDecision", "decline"] ],
-];
-function newSim() {
-  sim = createSim(SEED);
-  evts = []; ptr = 0; selected = null;
-  sim.on(onEvent);
-  renderAll();
-}
-function onEvent(e) {
-  evts.push(e);
-  appendTerm(e);
-  graphEvent(e);
-  if (e.kind === "confirmed") tone(660, 0.18);
-  else if (/decline|nomatch|exception/.test(e.kind)) tone(220, 0.16);
-  renderDynamic();
-}
-function act(name, arg) {
-  const r = arg === undefined ? sim[name]() : sim[name](arg);
-  if (r && r.error) return r;
-  // advance script pointer when the manual action matches the script
-  const sc = SCRIPTS[scenIdx];
-  if (ptr < sc.length && sc[ptr][0] === name && (sc[ptr][1] === undefined || sc[ptr][1] === arg)) ptr++;
-  tone(520, 0.07);
-  if (followOn) followToPhase(); else dockAlert();
-  return r;
-}
-function doStep() {
-  const sc = SCRIPTS[scenIdx];
-  if (ptr >= sc.length) { stopAuto(); return; }
-  const [name, arg] = sc[ptr];
-  const r = act(name, arg);
-  if (r && r.error) stopAuto();
-}
-function switchScenario(i) {
-  scenIdx = i; stopAuto(); newSim();
-}
-function toggleAuto() {
-  autoOn = !autoOn;
-  clearInterval(autoTimer);
-  if (autoOn) autoTimer = setInterval(() => { if (!document.hidden) doStep(); }, 3000);
-  renderTransport();
-}
-function stopAuto() { if (!autoOn) return; autoOn = false; clearInterval(autoTimer); renderTransport(); }
-function replay() { stopAuto(); newSim(); autoOn = true; autoTimer = setInterval(() => { if (!document.hidden) doStep(); }, 1200); renderTransport(); }
-
-/* ---------- graph state derivation ---------- */
-const PHASE_NODE = { intake: "intake", clarify: "context", verify: "context", discover: "discovery", match: "match", coordinate: "referral", review: "review", family: "referral", follow: "follow" };
-function graphModel() {
-  const s = sim.snapshot();
-  const kinds = new Set(evts.map(e => e.kind));
-  const visited = new Set(["request"]);
-  ["intake", "verify", "discover", "match", "coordinate", "review", "family", "follow"].forEach(ph => {
-    if (kinds.has("structured") || kinds.has("clarify") || s.phase !== "idle") visited.add("intake");
-  });
-  if (kinds.has("structured") || ["verify", "discover", "match", "coordinate", "review", "family", "follow"].includes(s.phase) || s.phase === "outcome") visited.add("context");
-  if (kinds.has("search") || ["discover", "match", "coordinate", "review", "family", "follow"].includes(s.phase) || s.phase === "outcome") visited.add("discovery");
-  if (kinds.has("match") || ["match", "coordinate", "review", "family", "follow"].includes(s.phase) || s.phase === "outcome") visited.add("match");
-  if (kinds.has("review") || kinds.has("propose") || ["review", "family", "follow"].includes(s.phase) || s.phase === "outcome") visited.add("review");
-  if (kinds.has("approved") || kinds.has("accepted") || s.phase === "family" || s.phase === "follow" || (s.phase === "outcome" && ["confirmed", "awaiting", "closed-unconfirmed"].includes(s.outcome))) visited.add("referral");
-  if (kinds.has("accepted") || s.phase === "follow" || (s.phase === "outcome" && ["confirmed", "awaiting", "closed-unconfirmed"].includes(s.outcome))) visited.add("follow");
-  if (s.phase === "outcome") visited.add("outcome");
-  if (s.outcome === "escalated") visited.add("esc");
-  const cur = s.phase === "idle" ? null : (PHASE_NODE[s.phase] || (s.phase === "outcome" ? "outcome" : null));
-  const st = {};
-  const all = ["request", "intake", "context", "discovery", "match", "review", "referral", "follow", "outcome", "esc"];
-  all.forEach(k => { st[k] = { status: "waiting", label: t().stages[k][0], sub: t().stW.waiting }; });
-  visited.forEach(k => { if (st[k]) { st[k].status = "done"; st[k].sub = t().stW.done; } });
-  if (s.phase === "clarify") { st.context = { status: "blocked", label: t().stages.context[0], sub: t().stW.blocked }; }
-  if (cur && st[cur] && s.phase !== "outcome") {
-    if (s.phase === "review") st.review = { status: "human", label: t().stages.review[0], sub: t().stW.human };
-    else if (!(s.phase === "clarify" && cur === "context")) { st[cur].status = "active"; st[cur].sub = t().stW.active; }
-  }
-  if (s.phase === "coordinate") st.referral.sub = (lang === "ar" ? "تجهيز" : "preparing");
-  if (s.phase === "family") st.referral.sub = (lang === "ar" ? "عرض على الأسرة" : "with family");
-  if (s.outcome === "no-match") { st.outcome = { status: "failed", label: t().stages.outcome[0], sub: t().outNames["no-match"] }; }
-  else if (s.outcome === "declined") {
-    st.referral.status = "failed"; st.referral.sub = t().stW.failed;
-    st.outcome = { status: "done", label: t().stages.outcome[0], sub: t().outNames.declined };
-  } else if (s.outcome) {
-    const good = s.outcome === "confirmed";
-    st.outcome = { status: good ? "done" : (s.outcome === "awaiting" || s.outcome === "escalated" ? "blocked" : "done"),
-      label: t().stages.outcome[0], sub: t().outNames[s.outcome] };
-    if (s.outcome === "escalated") st.esc = { status: "blocked", label: t().stages.esc[0], sub: t().outNames.escalated };
-  }
-  // lit edges: chain up to current
-  const chain = ["request", "intake", "context", "discovery", "match", "review", "referral", "follow", "outcome"];
-  const lit = new Set();
-  const upto = cur ? chain.indexOf(cur) : (s.phase === "outcome" ? 99 : -1);
-  for (let i = 0; i < Math.min(upto, 8); i++) lit.add("e" + i);
-  if (s.phase === "outcome" && s.outcome !== "escalated") lit.add("e7");
-  if (s.outcome === "escalated") lit.add("e-esc");
-  return { st, lit, loop: kinds.has("clarify") || kinds.has("gateway-clarify") };
-}
-function graphEvent(e) {
-  const D = e.data || {};
-  const nodeOf = a => ({ intake: "intake", verify: "context", discover: "discovery", match: "match", coord: "referral", human: "review", follow: "follow" })[a];
-  if (e.kind === "case") FLOW.handoff("request", "intake", "#ffffff");
-  else if (e.kind === "handoff" && D.from && D.to) {
-    const a = nodeOf(D.from), b = D.to === "human" ? "review" : nodeOf(D.to);
-    if (a && b) FLOW.handoff(a, b, D.to === "human" ? "#ff9a3c" : "#7fd4e8");
-  }
-  else if (e.kind === "accepted") FLOW.handoff("review", "referral", "#4ade80");
-  else if (e.kind === "confirmed") FLOW.handoff("follow", "outcome", "#4ade80");
-  else if (e.kind === "gateway-clarify") FLOW.handoff("review", "match", "#ff9a3c");
-  renderGraph();
-}
-function renderGraph() {
-  const m = graphModel();
-  FLOW.render(m.st, m.lit, m.loop);
-}
-
-/* ---------- renders ---------- */
-function activeAgent() {
-  const s = sim.snapshot();
-  const order = ["intake", "verify", "discover", "match", "coord", "human", "follow"];
-  const phOwner = { intake: "intake", clarify: "verify", verify: "verify", discover: "discover", match: "match", coordinate: "coord", review: "human", family: "coord", follow: "follow" };
-  const id = phOwner[s.phase];
-  if (!id) return null;
-  return sim.agents.find(a => a.id === id);
-}
-function renderCase() {
-  const s = sim.snapshot();
-  const ag = activeAgent();
-  const blockers = [];
-  if (s.phase === "clarify") blockers.push(lang === "ar" ? "معلومات ناقصة: المدينة والمدة" : "missing: city, duration");
-  if (s.phase === "outcome" && s.outcome === "no-match") blockers.push(lang === "ar" ? "لا مرشح صالح" : "no viable candidate");
-  const rows = [
-    [t().kNeed, t().needLine],
-    [t().kCons, t().consLine],
-    [t().kStage, s.phase === "idle" ? t().awaiting : t().stages[PHASE_NODE[s.phase] || "outcome"][0]],
-    [t().kAgent, ag ? (lang === "ar" ? ag.ar : ag.en) : t().none],
-    [t().kBlock, blockers.length ? blockers.join(" · ") : t().none],
-    [t().kDec, s.phase === "review" ? t().stages.review[0] : t().none],
-    [t().kRef, s.proposed ? (lang === "ar" ? sim.resources.find(r => r.id === s.proposed).ar : sim.resources.find(r => r.id === s.proposed).en) : t().none],
-    [t().kOut, s.outcome ? t().outNames[s.outcome] : t().none],
-  ];
-  $("caseKv").innerHTML = rows.map(r => "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>").join("");
-  const last = evts[evts.length - 1];
-  $("caseSide").innerHTML = "<div style='font-size:.85rem'>" +
-    (last ? "<span class='pill work'>#" + last.seq + "</span> " + (lang === "ar" ? last.ar : last.en) : "<span class='pill'>" + t().awaiting + "</span>") +
-    "</div>";
-}
-function renderTransport() {
-  const C = $("transport"); C.innerHTML = "";
-  const mk = (label, fn, cls, dis) => {
-    const b = document.createElement("button");
-    b.className = "btn " + (cls || ""); b.textContent = label; b.disabled = !!dis;
-    b.addEventListener("click", () => { tone(520, 0.06); stopAuto(); fn(); });
-    C.appendChild(b); return b;
-  };
-  mk(t().step, doStep, "primary", ptr >= SCRIPTS[scenIdx].length);
-  const au = mk(autoOn ? t().pause : t().auto, toggleAuto, "");
-  mk(t().restart, () => newSim(), "");
-  mk(t().replay, replay, "ghost");
-  // mirror primary controls into the fixed bottom action bar
-  const done = ptr >= SCRIPTS[scenIdx].length;
-  if ($("mStep")) { $("mStep").textContent = t().step; $("mStep").disabled = done; }
-  if ($("mAuto")) $("mAuto").textContent = autoOn ? t().pause : t().auto;
-}
-function renderScenarios() {
-  const R = $("scenRow"); R.innerHTML = "";
-  t().scenarios.forEach((sc, i) => {
-    const b = document.createElement("button");
-    b.className = "scen"; b.setAttribute("aria-pressed", i === scenIdx ? "true" : "false");
-    b.innerHTML = sc[0] + "<small>" + sc[1] + "</small>";
-    b.addEventListener("click", () => { tone(520, 0.06); switchScenario(i); });
-    R.appendChild(b);
-  });
-}
-function lastAgentEvent(id) {
-  for (let i = evts.length - 1; i >= 0; i--) if (evts[i].agent === id) return evts[i];
-  return null;
-}
-function renderAgents() {
-  const s = sim.snapshot();
-  const liveA = activeAgent(), liveId = liveA ? liveA.id : null;
-  const lastAg = evts.length ? evts[evts.length - 1].agent : null;
-  $("agentList").innerHTML = sim.agents.map((a, i) => {
-    const st = s.agents[a.id];
-    const last = lastAgentEvent(a.id);
-    const cls = st.state === "working" ? "work" : st.state === "waiting" ? "wait" : st.state === "done" ? "done" : "";
-    const live = (a.id === liveId ? " live" : "") + (a.id === lastAg ? " tick" : "");
-    return "<div class='agent" + (selected && selected.kind === "agent" && selected.id === a.id ? " sel" : "") + live + "' data-ag='" + a.id + "' style='--ag:#" + a.color.toString(16).padStart(6, "0") + "'>" +
-      "<div class='hd'><span class='swatch' style='background:#" + a.color.toString(16).padStart(6, "0") + "'></span>" +
-      "<span class='nm'>" + (lang === "ar" ? a.ar : a.en) + "</span>" +
-      "<span class='pill " + cls + "'>" + t().stWords[st.state] + "</span></div>" +
-      "<div class='tk'>" + (lang === "ar" ? st.taskAr : st.taskEn) + "</div>" +
-      "<div class='lt'>" + t().lastDone + ": " + (last ? (lang === "ar" ? last.ar : last.en) + " #" + last.seq : "—") + "</div></div>";
-  }).join("");
-  $("agentList").querySelectorAll(".agent").forEach(el =>
-    el.addEventListener("click", () => { tone(520, 0.06); select({ kind: "agent", id: el.getAttribute("data-ag") }); }));
-}
-function renderRes() {
-  const s = sim.snapshot();
-  if (!s.searchResults.length) { $("resList").innerHTML = "<div style='color:var(--dim);font-size:.85rem'>" + t().noRes + "</div>"; return; }
-  $("resList").innerHTML = s.searchResults.map(sr => {
-    const r = sim.resources.find(x => x.id === sr.resId);
-    const cls = sr.resId === s.proposed ? "sel" : sr.viable ? "lit" : "dead";
-    const tag = sr.resId === s.proposed ? t().proposedTag : sr.viable ? t().viable : t().rejected;
-    let h = "<div class='resrow " + cls + "' data-res='" + sr.resId + "'><b>" + (lang === "ar" ? r.ar : r.en) + "</b> " +
-      "<span class='pill " + (sr.viable ? "done" : "bad") + "'>" + tag + "</span>";
-    sr.criteria.forEach(c => {
-      h += "<div class='crit'><span class='" + (c.pass ? "y" : "n") + "'>" + (c.pass ? "✓" : "✗") + "</span><span>" + (lang === "ar" ? c.ar : c.en) + "</span></div>";
-    });
-    return h + "</div>";
-  }).join("");
-  $("resList").querySelectorAll(".resrow").forEach(el =>
-    el.addEventListener("click", () => { tone(520, 0.06); select({ kind: "res", id: el.getAttribute("data-res") }); }));
-}
-function renderReview() {
-  const s = sim.snapshot();
-  const box = $("reviewBox");
-  const card = box.closest(".card");
-  if (card) card.classList.toggle("gate", s.phase === "review");
-  if (s.phase !== "review") {
-    box.innerHTML = "<div style='color:var(--dim);font-size:.85rem'>" + (s.reviewDecision
-      ? (lang === "ar" ? "القرار: " + s.reviewDecision : "decision: " + s.reviewDecision)
-      : t().none) + "</div>";
-    return;
-  }
-  const r = sim.resources.find(x => x.id === s.proposed);
-  const sr = s.searchResults.find(x => x.resId === s.proposed);
-  let h = "<div class='decisionBox'><div style='font-weight:700'>" + (lang === "ar" ? r.ar : r.en) + "</div>";
-  h += "<div style='font-size:.8rem;color:var(--dim);margin:4px 0'>" + t().evd + ":</div>";
-  h += sr.criteria.filter(c => c.pass).map(c => "<div class='crit'><span class='y'>✓</span><span>" + (lang === "ar" ? c.ar : c.en) + "</span></div>").join("");
-  const fails = sr.criteria.filter(c => !c.pass);
-  if (fails.length) {
-    h += "<div style='font-size:.8rem;color:var(--dim);margin:4px 0'>" + t().unc + ":</div>";
-    h += fails.map(c => "<div class='crit'><span class='n'>✗</span><span>" + (lang === "ar" ? c.ar : c.en) + "</span></div>").join("");
-  }
-  h += "<div style='font-size:.8rem;color:var(--dim);margin:4px 0'>" + t().decide + ":</div><div class='btns'>" +
-    "<button class='btn green' data-dec='approve'>" + t().bApprove + "</button>" +
-    "<button class='btn amber' data-dec='decline'>" + t().bDecline + "</button>" +
-    "<button class='btn ghost' data-dec='clarify'>" + t().bClar + "</button></div></div>";
-  box.innerHTML = h;
-  box.querySelectorAll("[data-dec]").forEach(b =>
-    b.addEventListener("click", () => { tone(520, 0.06); stopAuto(); act("reviewDecision", b.getAttribute("data-dec")); }));
-}
-function renderFollow() {
-  const s = sim.snapshot();
-  const steps = [];
-  const seqOf = kind => { const e = evts.find(e => e.kind === kind); return e ? "#" + e.seq : ""; };
-  if (s.proposed) steps.push({ t: lang === "ar" ? "اقتراح الإحالة" : "Referral proposed", s: seqOf("propose"), c: "done" });
-  if (["family", "follow"].includes(s.phase) || (s.phase === "outcome" && ["confirmed", "awaiting", "closed-unconfirmed"].includes(s.outcome)))
-    steps.push({ t: lang === "ar" ? "قبول الأسرة" : "Family accepted", s: seqOf("accepted"), c: "done" });
-  if (s.phase === "follow" || (s.phase === "outcome" && ["confirmed", "awaiting", "closed-unconfirmed"].includes(s.outcome)))
-    steps.push({ t: lang === "ar" ? "متابعة جارية" : "Follow-up active", s: seqOf("accepted"), c: s.phase === "follow" ? "now" : "done" });
-  if (s.outcome) steps.push({ t: t().outNames[s.outcome], s: seqOf(s.outcome === "confirmed" ? "confirmed" : s.outcome === "awaiting" ? "awaiting" : s.outcome === "closed-unconfirmed" ? "closed-unconfirmed" : s.outcome === "declined" ? "family-decline" : "exception"), c: s.outcome === "confirmed" ? "done" : "now" });
-  $("followBox").innerHTML = steps.length
-    ? "<div class='tl'>" + steps.map(x => "<div class='tlItem " + x.c + "'>" + x.t + "<small>" + x.s + "</small></div>").join("") + "</div>"
-    : "<div style='color:var(--dim);font-size:.85rem'>" + t().none + "</div>";
-}
-function renderTerm() { /* incremental via appendTerm */ }
-function appendTerm(e) {
-  const box = $("term");
-  const d = document.createElement("div");
-  d.className = "ln fresh"; d.setAttribute("data-seq", e.seq);
-  d.innerHTML = "<span class='sq'>#" + e.seq + "</span><span>" + (lang === "ar" ? e.ar : e.en) + "</span>";
-  d.addEventListener("click", () => { tone(520, 0.06); select({ kind: "event", id: e.seq }); });
-  box.appendChild(d);
-  while (box.children.length > 150) box.firstChild.remove();
-  box.scrollTop = box.scrollHeight;
-  box.querySelectorAll(".ln").forEach(x =>
-    x.classList.toggle("sel", !!selected && selected.kind === "event" && +x.getAttribute("data-seq") === selected.id));
-}
-/* ---------- inspector ---------- */
-function select(sel) {
-  userPaused(); // manual inspection takes over from auto-follow
-  selected = sel;
-  FLOW.setSelected(sel && sel.kind === "stage" ? sel.id : null);
-  renderGraph(); renderAgents(); renderRes(); renderInspector();
-  const box = $("sheet");
-  if (box.hidden === false) box.scrollTop = 0;
-}
-function stageDetail(key) {
-  const s = sim.snapshot(), I = t().insp;
-  const rel = evts.filter(e => e.kind !== "agent" && e.kind !== "task");
-  const at = rel.filter(e => {
-    const D = e.data || {};
-    const map = { intake: ["intake"], context: ["verify"], discovery: ["discover"], match: ["match"], review: ["human"], referral: ["coord"], follow: ["follow"] };
-    return (map[key] || []).includes(e.agent) || (map[key] || []).includes(D.from) || (map[key] || []).includes(D.to);
-  });
-  const last = at[at.length - 1];
-  const agName = id => { const a = sim.agents.find(a => a.id === id); return a ? (lang === "ar" ? a.ar : a.en) : "—"; };
-  const owner = { request: "intake", intake: "intake", context: "verify", discovery: "discover", match: "match", review: "human", referral: "coord", follow: "follow", outcome: "follow", esc: "coord" }[key];
-  return { title: t().stages[key][0], rows: [
-    [I.trigger, last ? (lang === "ar" ? last.ar : last.en) + " #" + last.seq : t().none],
-    [I.agent, agName(owner)],
-    [I.input, key === "discovery" ? (lang === "ar" ? "طلب متحقق + الدليل الخيالي" : "verified request + fictional directory") : key === "review" && s.proposed ? (lang === "ar" ? sim.resources.find(r => r.id === s.proposed).ar : sim.resources.find(r => r.id === s.proposed).en) : "—"],
-    [I.output, key === "discovery" ? s.shortlist.length + " / " + s.searchResults.length : key === "outcome" && s.outcome ? t().outNames[s.outcome] : "—"],
-    [I.why, key === "outcome" && s.outcomeNote ? s.outcomeNote : "—"],
-    [I.next, nextHint(key)],
-  ]};
-}
-function nextHint(key) {
-  const s = sim.snapshot();
-  if (s.phase === "idle") return lang === "ar" ? "ابدأ سيناريو" : "start a scenario";
-  const order = ["intake", "context", "discovery", "match", "review", "referral", "follow", "outcome"];
-  const cur = PHASE_NODE[s.phase] || "outcome";
-  const i = order.indexOf(key), c = order.indexOf(cur);
-  if (i < c) return lang === "ar" ? "اكتملت" : "completed";
-  if (i === c) return lang === "ar" ? "نشطة الآن" : "active now";
-  return lang === "ar" ? "تنتظر دورها" : "awaits its turn";
-}
-function renderInspector() {
-  const box = $("sheet");
-  if (!selected) { box.hidden = true; return; }
-  let title = "", rows = [];
-  if (selected.kind === "stage") {
-    const d = stageDetail(selected.id); title = d.title; rows = d.rows;
-  } else if (selected.kind === "agent") {
-    const i = sim.agents.findIndex(a => a.id === selected.id);
-    const a = sim.agents[i], st = sim.snapshot().agents[a.id];
-    const last = lastAgentEvent(a.id);
-    title = (lang === "ar" ? a.ar : a.en);
-    const I = t().insp;
-    rows = [[I.agent, t().roles[i]], [t().stWords ? "" : "", ""], [I.action, (lang === "ar" ? st.taskAr : st.taskEn)],
-      [I.output, last ? (lang === "ar" ? last.ar : last.en) + " #" + last.seq : t().none],
-      [I.next, nextHint({ intake: "intake", verify: "context", discover: "discovery", match: "match", coord: "referral", human: "review", follow: "follow" }[a.id])]];
-    rows = rows.filter(r => r[0]);
-  } else if (selected.kind === "res") {
-    const r = sim.resources.find(x => x.id === selected.id);
-    const sr = sim.snapshot().searchResults.find(x => x.resId === r.id);
-    title = (lang === "ar" ? r.ar : r.en);
-    const IR = t().inspRes;
-    rows = [[IR.dist, r.attrs.distKm], [IR.lang, r.attrs.lang === "ar" ? (lang === "ar" ? "العربية" : "Arabic") : (lang === "ar" ? "الإنجليزية" : "English")], [IR.slots, r.attrs.slots], [IR.days, r.attrs.days]];
-    if (sr) sr.criteria.forEach(c => rows.push([(c.pass ? "✓ " : "✗ ") + IR.crit, (lang === "ar" ? c.ar : c.en)]));
-  } else if (selected.kind === "event") {
-    const e = evts.find(e => e.seq === selected.id);
-    if (!e) { box.hidden = true; return; }
-    title = "#" + e.seq + " · " + e.kind;
-    rows = [[t().insp.agent, e.agent || "—"], [t().insp.output, (lang === "ar" ? e.ar : e.en)]];
-  }
-  $("sheetTitle").textContent = title;
-  $("sheetBody").innerHTML = "<dl class='kv'>" + rows.map(r => "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>").join("") + "</dl>";
-  box.hidden = false;
-}
-/* ---------- auto-follow viewport ---------- */
-let followOn = true;
-const reducedMotion = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
-const FOLLOW_SEL = { intake: "#agentList", clarify: "#caseKv", verify: "#agentList", discover: "#resList", match: "#resList", coordinate: "#reviewBox", review: "#reviewBox", family: "#followBox", follow: "#followBox", outcome: "#caseKv" };
-const PHASE_GLOW = { intake: "#7fd4e8", clarify: "#ff9a3c", verify: "#b48cff", discover: "#3f8cff", match: "#53e0c8", coordinate: "#f5c86e", review: "#ff9a3c", family: "#f5c86e", follow: "#4ade80", outcome: "#4ade80", idle: "#626d8c" };
-function layoutSticky() {
-  const top = $("topbar") ? $("topbar").offsetHeight : 56;
-  const dock = $("dock");
-  if (dock) dock.style.top = (top + 6) + "px";
-  const anchor = top + (dock ? dock.offsetHeight : 0) + 18;
-  document.documentElement.style.setProperty("--anchor", anchor + "px");
-  const tabs = $("tabs");
-  if (tabs) tabs.style.top = (top + (dock ? dock.offsetHeight : 0) + 12) + "px";
-}
-function anchorPx() {
-  const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--anchor"), 10);
-  return isNaN(v) ? 150 : v;
-}
-function inView(el) {
-  if (!el) return true;
-  const r = el.getBoundingClientRect();
-  return r.top >= anchorPx() - 4 && r.bottom <= window.innerHeight - 96;
-}
-function flash(el) {
-  if (!el || reducedMotion()) return;
-  el.classList.remove("flash");
-  void el.offsetWidth;
-  el.classList.add("flash");
-  setTimeout(() => el.classList.remove("flash"), 1400);
-}
-function currentFocus() {
-  if (!sim) return null;
-  const s = sim.snapshot();
-  const el = document.querySelector(FOLLOW_SEL[s.phase] || "#caseKv");
-  return el ? el.closest(".card,.caseCard,.flowWrap") || el : null;
-}
-function followToPhase(force) {
-  const el = currentFocus();
-  if (!el) return;
-  if ((followOn || force) && !inView(el)) {
-    try { el.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "nearest" }); }
-    catch (e) { el.scrollIntoView(); }
-  }
-  flash(el);
-}
-function userPaused() {
-  if (!followOn) return;
-  followOn = false;
-  renderDock();
-}
-function renderDock() {
-  if (!sim || !$("dock")) return;
-  const s = sim.snapshot();
-  const ag = activeAgent();
-  // phase-reactive ambient lighting (event-driven, not decorative)
-  const pg = PHASE_GLOW[s.phase] || "#626d8c";
-  document.documentElement.style.setProperty("--phase", pg);
-  document.documentElement.style.setProperty("--phaseSoft", pg + "26");
-  const stageName = s.phase === "idle" ? t().awaiting : ((t().stages[PHASE_NODE[s.phase] || "outcome"] || [])[0] || s.phase);
-  $("dockStage").textContent = t().liveNow + " · " + stageName;
-  $("dockAgent").textContent = ag ? (lang === "ar" ? ag.ar : ag.en) : "";
-  const last = evts[evts.length - 1];
-  $("dockEvt").textContent = last ? "#" + last.seq + " " + (lang === "ar" ? last.ar : last.en) : t().noEvents;
-  const fb = $("followBtn");
-  fb.textContent = followOn ? "⏸ " + t().followOn : "▶ " + t().followOff;
-  fb.setAttribute("aria-pressed", followOn ? "true" : "false");
-  $("dock").classList.toggle("paused", !followOn);
-}
-function dockAlert() {
-  const dock = $("dock");
-  if (!dock) return;
-  dock.classList.remove("alert");
-  void dock.offsetWidth;
-  dock.classList.add("alert");
-  setTimeout(() => dock.classList.remove("alert"), 1400);
-}
-/* ---------- tabs / lang / boot ---------- */
-function renderTabs() {
-  const tabs = $("tabs"); tabs.innerHTML = "";
-  const defs = [["agents", 0], ["data", 1], ["data", 2]];
-  t().tabs.forEach((label, i) => {
-    const b = document.createElement("button");
-    b.className = "tab"; b.setAttribute("role", "tab");
-    b.setAttribute("aria-selected", i === 0 ? "true" : "false");
-    b.textContent = label;
-    b.addEventListener("click", () => {
-      tone(520, 0.06);
-      userPaused(); // explicit navigation takes over from auto-follow
-      tabs.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", "false"));
-      b.setAttribute("aria-selected", "true");
-      document.querySelectorAll(".panel").forEach(p =>
-        p.classList.toggle("show", p.getAttribute("data-panel") === defs[i][0]));
-      if (i === 1) $("resList").scrollIntoView({ block: "nearest" });
-      if (i === 2) $("term").scrollIntoView({ block: "nearest" });
-    });
-    tabs.appendChild(b);
-  });
-  document.querySelectorAll(".panel").forEach(p =>
-    p.classList.toggle("show", p.getAttribute("data-panel") === "agents"));
-}
-function setLang(l) {
-  lang = l;
-  document.documentElement.lang = l;
-  document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
-  $("langBtn").textContent = l === "ar" ? "EN" : "عربي";
-  $("sndBtn").textContent = soundOn ? "🔊" : "🔇";
-  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t()[el.getAttribute("data-i18n")]; });
-  renderTabs(); renderAll(); layoutSticky();
-}
-function renderAll() {
-  if (!sim) return;
-  renderScenarios(); renderCase(); renderTransport(); renderGraph();
-  renderAgents(); renderRes(); renderReview(); renderFollow(); renderDock();
-  // rebuild terminal deterministically
-  $("term").innerHTML = "";
-  evts.forEach(appendTermSilent);
-  renderInspector();
-}
-function appendTermSilent(e) {
-  const box = $("term");
-  const d = document.createElement("div");
-  d.className = "ln"; d.setAttribute("data-seq", e.seq);
-  d.innerHTML = "<span class='sq'>#" + e.seq + "</span><span>" + (lang === "ar" ? e.ar : e.en) + "</span>";
-  d.addEventListener("click", () => { tone(520, 0.06); select({ kind: "event", id: e.seq }); });
-  box.appendChild(d);
-}
-function renderDynamic() {
-  renderCase(); renderTransport(); renderGraph();
-  renderAgents(); renderRes(); renderReview(); renderFollow(); renderDock();
-}
-/* ambient particle field: slow drifting dots, cyan/gold/violet; idle-cheap */
-function ambientInit() {
-  if (reducedMotion()) return;
-  const cv = $("ambient");
-  if (!cv || !cv.getContext) return;
-  const ctx = cv.getContext("2d");
-  let W = 0, H = 0;
-  const ps = [];
-  function size() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  size();
-  window.addEventListener("resize", size);
-  const cols = ["127,212,232", "245,200,110", "180,140,255", "74,222,128"];
-  const N = window.innerWidth < 600 ? 34 : 60;
-  for (let i = 0; i < N; i++) ps.push({ x: Math.random() * W, y: Math.random() * H, r: 0.6 + Math.random() * 1.6, s: 0.08 + Math.random() * 0.25, c: cols[i % cols.length], p: Math.random() * 6.28 });
-  (function frame() {
-    requestAnimationFrame(frame);
-    if (document.hidden) return;
-    ctx.clearRect(0, 0, W, H);
-    for (const p of ps) {
-      p.y -= p.s; p.p += 0.02;
-      if (p.y < -4) { p.y = H + 4; p.x = Math.random() * W; }
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.29);
-      ctx.fillStyle = "rgba(" + p.c + "," + (0.12 + 0.10 * Math.sin(p.p)).toFixed(3) + ")";
-      ctx.fill();
+    // create canvas texture with moving typographic strips
+    const textCanvas = document.createElement('canvas'); textCanvas.width = 1024; textCanvas.height = 1024;
+    const tctx = textCanvas.getContext('2d'); tctx.fillStyle = 'rgba(0,0,0,0)'; tctx.fillRect(0,0,1024,1024);
+    function drawTextAtlas(){ tctx.clearRect(0,0,1024,1024); tctx.fillStyle='rgba(255,255,255,0.95)'; tctx.font='42px Cairo, Inter, sans-serif';
+      const phrases = ['NEED IDENTIFIED','RESOURCE DISCOVERED','POTENTIAL MATCH','HUMAN REVIEW REQUIRED','REFERRAL INITIATED','FOLLOW-UP PENDING','OUTCOME NOT YET CONFIRMED','PRIVACY PROTECTED'];
+      for(let i=0;i<32;i++){ const txt = phrases[i%phrases.length]; const x = (i*67)%1024; const y = 40 + (i*31)%980; tctx.globalAlpha = 0.06 + (i%6)/14; tctx.fillText(txt,x,y); }
     }
-  })();
-}
-function boot() {
-  if (typeof createSim === "undefined" || typeof FLOW === "undefined") { setTimeout(boot, 100); return; }
-  FLOW.build($("flowSvg"));
-  FLOW.onSelect(id => { tone(520, 0.06); select({ kind: "stage", id }); });
-  $("langBtn").addEventListener("click", () => { tone(520, 0.06); setLang(lang === "ar" ? "en" : "ar"); });
-  $("sndBtn").addEventListener("click", () => {
-    soundOn = !soundOn;
-    $("sndBtn").textContent = soundOn ? "🔊" : "🔇";
-    if (soundOn) { audioInit(); tone(520, 0.06); }
-  });
-  $("sheetX").addEventListener("click", () => { selected = null; FLOW.setSelected(null); renderGraph(); renderAgents(); renderRes(); renderInspector(); });
-  $("followBtn").addEventListener("click", () => {
-    tone(520, 0.06);
-    followOn = !followOn;
-    renderDock();
-    if (followOn) followToPhase(true);
-  });
-  $("dockEvt").addEventListener("click", () => { tone(520, 0.06); userPaused(); followToPhase(true); });
-  $("mStep").addEventListener("click", () => { tone(520, 0.06); stopAuto(); doStep(); });
-  $("mAuto").addEventListener("click", () => { tone(520, 0.06); toggleAuto(); });
-  window.addEventListener("wheel", userPaused, { passive: true });
-  window.addEventListener("touchmove", userPaused, { passive: true });
-  window.addEventListener("resize", layoutSticky);
-  ambientInit();
-  setLang("ar");
-  newSim();
-}
-if (document.readyState !== "loading") boot();
-else document.addEventListener("DOMContentLoaded", boot);
+    drawTextAtlas();
+    const textTex = new THREE.CanvasTexture(textCanvas); textTex.needsUpdate = true; textTex.wrapS = textTex.wrapT = THREE.RepeatWrapping;
 
-</script>
+    // material: luminous with slight fresnel and map
+    const mat = new THREE.MeshStandardMaterial({ color:0x06203a, metalness:0.12, roughness:0.35, emissive:0x072b38, emissiveIntensity:0.9, map:textTex, transparent:true, opacity:0.98 });
+    const sculpture = new THREE.Mesh(baseGeom, mat); sculpture.frustumCulled = false; scene.add(sculpture);
+
+    // subtle vertex displacement function using per-vertex noise (CPU approximation)
+    const vcount = baseGeom.attributes.position.count;
+    const offsets = new Float32Array(vcount*3);
+    for(let i=0;i<vcount;i++){ offsets[i*3+0] = (Math.random()-0.5)*1.2; offsets[i*3+1] = (Math.random()-0.5)*1.2; offsets[i*3+2] = (Math.random()-0.5)*1.2; }
+
+    // agents: place small nodes around
+    const AGENTS = [
+      {id:'intake',name:{ar:'وكيل الاستقبال',en:'Intake Agent'}, color:0x7fd4e8},
+      {id:'verify',name:{ar:'وكيل التحقق',en:'Verification'}, color:0xb48cff},
+      {id:'discover',name:{ar:'وكيل الاكتشاف',en:'Discovery'}, color:0x3f8cff},
+      {id:'match',name:{ar:'وكيل المطابقة',en:'Matching'}, color:0x53e0c8},
+      {id:'coord',name:{ar:'وكيل التنسيق',en:'Coordination'}, color:0xf5c86e},
+      {id:'follow',name:{ar:'وكيل المتابعة',en:'Follow-up'}, color:0x4ade80}
+    ];
+    const agentObjs = [];
+    const radius = 260;
+    AGENTS.forEach((a, i)=>{
+      const angle = (i/AGENTS.length) * Math.PI*2 - Math.PI/6;
+      const x = Math.cos(angle)*radius; const y = Math.sin(angle)*radius*0.62; const z = Math.sin(angle*1.3)*40;
+      const g = new THREE.Mesh(new THREE.SphereGeometry(10,16,12), new THREE.MeshStandardMaterial({color:a.color,emissive:a.color,emissiveIntensity:0.8,metalness:0.2,roughness:0.3}));
+      g.position.set(x,y,z); g.userData = a; scene.add(g); agentObjs.push(g);
+      // attach small ring
+      const ring = new THREE.Mesh(new THREE.RingGeometry(14,18,32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.06})); ring.position.copy(g.position); ring.rotation.x = Math.PI/2; scene.add(ring);
+    });
+
+    // particle pulses (simple moving spheres)
+    const pulses = [];
+    function spawnPulse(fromVec, toVec, color=0xffffff){ const mesh = new THREE.Mesh(new THREE.SphereGeometry(3.4,8,8), new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.9,roughness:0.2})); mesh.position.copy(fromVec); mesh.userData = {t:0, from:fromVec.clone(), to:toVec.clone()}; scene.add(mesh); pulses.push(mesh); }
+
+    // helper: world pos of sculpture center
+    const center = new THREE.Vector3(0,0,0);
+
+    // basic orbit and subtle camera moves
+    let tStart = performance.now();
+    function animate(now){ const t = (now - tStart)/1000;
+      // sculpt morph: compute a factor that cycles 0..1 over 36s
+      const cycle = 36; const phase = (t % cycle)/cycle; // 0..1
+      // displace vertices CPU-side for now (cheap enough for prototype)
+      const pos = sculpture.geometry.attributes.position;
+      for(let i=0;i<pos.count;i++){
+        const bx = posBase[i*3+0], by = posBase[i*3+1], bz = posBase[i*3+2];
+        // create simple morph impression by scaling and adding sin-based displacement based on phase
+        const s = 1 + 0.08 * Math.sin(phase*Math.PI*2 + i*0.0005* (i%7+1));
+        let nx = bx * s; let ny = by * s; let nz = bz * s;
+        // subtle cube-like pinch when phase between 0.25-0.5
+        const cubePhase = Math.max(0, 1 - Math.abs((phase-0.35)/0.15)); nx += Math.sign(nx)*cubePhase*8; ny += Math.sign(ny)*cubePhase*8; nz += Math.sign(nz)*cubePhase*8;
+        // torus-like belt when phase around 0.6-0.8
+        const torusPhase = Math.max(0, 1 - Math.abs((phase-0.7)/0.12)); const r = Math.sqrt(nx*nx + nz*nz); nx = nx*(1 - torusPhase*0.2); nz = nz*(1 - torusPhase*0.2); ny += torusPhase*10*Math.sin(i*0.01 + t*2);
+        // apply small random offsets
+        nx += offsets[i*3]*Math.sin(t*0.8 + i*0.03);
+        ny += offsets[i*3+1]*Math.cos(t*0.6 + i*0.02);
+        nz += offsets[i*3+2]*Math.sin(t*0.4 + i*0.04);
+        pos.array[i*3] = nx; pos.array[i*3+1] = ny; pos.array[i*3+2] = nz;
+      }
+      pos.needsUpdate = true;
+      sculpture.rotation.y += 0.0018;
+      sculpture.rotation.x = 0.06*Math.sin(t*0.3);
+
+      // pulses animation
+      for(let i=pulses.length-1;i>=0;i--){ const p = pulses[i]; p.userData.t += 0.012 + 0.01*Math.sin(t*2 + i); const tt = p.userData.t; p.position.lerpVectors(p.userData.from,p.userData.to, tt); if(tt>=1){ scene.remove(p); pulses.splice(i,1); }
+      }
+
+      // subtle camera bob
+      camera.position.x = Math.sin(t*0.08)*18; camera.position.y = Math.sin(t*0.05)*12; camera.lookAt(center);
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // resize handling
+    window.addEventListener('resize', ()=>{ const W = ROOT.clientWidth, H = ROOT.clientHeight; renderer.setSize(W,H); camera.aspect = W/H; camera.updateProjectionMatrix(); });
+
+    // pick handling
+    const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+    renderer.domElement.addEventListener('pointerdown', (ev)=>{
+      const rect = renderer.domElement.getBoundingClientRect(); mouse.x = ((ev.clientX-rect.left)/rect.width)*2 -1; mouse.y = -((ev.clientY-rect.top)/rect.height)*2 +1; ray.setFromCamera(mouse, camera);
+      const hits = ray.intersectObjects(agentObjs.concat(sculpture));
+      if(hits.length){ const h = hits[0].object; if(h===sculpture){ logEvent('Sculpture inspected'); } else { inspectAgent(h.userData); spawnPulse(center, h.position, h.material.color.getHex()); logEvent((document.documentElement.getAttribute('lang')==='ar'?h.userData.name.ar:h.userData.name.en)+ ' selected'); }
+    }
+    });
+
+    // simulation engine (deterministic script)
+    const events = document.getElementById('eventLog'); let simRunning=false; let simStepIndex=0;
+    const script = [
+      {id:'start',msg:{ar:'استلام الطلب — استلم Intake Agent طلباً وهمياً',en:'Request received — Intake Agent structured a request'}},
+      {id:'discover',msg:{ar:'اكتشاف الموارد — Discovery Agent اقترح موارد محتملة',en:'Discovery found potential resources'}},
+      {id:'match',msg:{ar:'مطابقة — Matching Agent رتب المرشحين حسب الصلاحية',en:'Matching ranked candidates'}},
+      {id:'review',msg:{ar:'مراجعة بشرية — Human review requested',en:'Human review required'}},
+      {id:'referral',msg:{ar:'إحالة — Coordination Agent أرسل إحالة مقترحة',en:'Referral proposed to provider'}},
+      {id:'follow',msg:{ar:'متابعة — Follow-up started',en:'Follow-up tracking started'}},
+      {id:'confirmed',msg:{ar:'تم التأكيد — Outcome confirmed with evidence',en:'Outcome confirmed'}},
+    ];
+    function logEvent(txt){ const d = document.createElement('div'); d.textContent = txt; events.appendChild(d); events.scrollTop = events.scrollHeight; }
+    function stepSim(){ if(simStepIndex>=script.length) return; const s = script[simStepIndex]; simStepIndex++; logEvent(document.documentElement.getAttribute('lang')==='ar'?s.msg.ar:s.msg.en); // spawn a pulse to a random agent
+      const agent = agentObjs[Math.max(0,Math.min(agentObjs.length-1,simStepIndex-2))]; if(agent){ spawnPulse(center, agent.position, agent.material.color.getHex()); }
+      // update metrics
+      document.getElementById('mNeeds').textContent = 1; document.getElementById('mMatches').textContent = Math.max(0,simStepIndex-1); document.getElementById('mReviews').textContent = (simStepIndex>3?1:0); document.getElementById('mConfirmed').textContent = (s.id==='confirmed'?1:0);
+    }
+    document.getElementById('simStart').addEventListener('click', ()=>{ if(simRunning) return; simRunning = true; window._simInterval = setInterval(()=>{ stepSim(); if(simStepIndex>=script.length){ clearInterval(window._simInterval); simRunning=false; } },1400); });
+    document.getElementById('simPause').addEventListener('click', ()=>{ simRunning=false; clearInterval(window._simInterval); });
+    document.getElementById('simStep').addEventListener('click', ()=> stepSim());
+    document.getElementById('simReset').addEventListener('click', ()=>{ simRunning=false; clearInterval(window._simInterval); simStepIndex=0; events.innerHTML=''; document.getElementById('mNeeds').textContent='—'; document.getElementById('mMatches').textContent='—'; document.getElementById('mReviews').textContent='—'; document.getElementById('mConfirmed').textContent='—'; });
+
+    // agent list UI
+    const agentsList = document.getElementById('agentsList'); AGENTS.forEach((a,i)=>{ const row = document.createElement('div'); row.className='agentRow'; const sw = document.createElement('div'); sw.className='agentSwatch'; sw.style.background = '#' + a.color.toString(16).padStart(6,'0'); const label = document.createElement('div'); label.innerHTML = '<strong>' + (document.documentElement.getAttribute('lang')==='ar'?a.name.ar:a.name.en) + '</strong><div class="small">' + (['Intake','Verify','Discover','Match','Coord','Follow'][i]) + '</div>'; row.appendChild(sw); row.appendChild(label); row.addEventListener('click', ()=>{ // focus camera on agent
+        const obj = agentObjs[i]; camera.position.set(obj.position.x*0.9, obj.position.y*0.85, 220); logEvent((document.documentElement.getAttribute('lang')==='ar'?a.name.ar:a.name.en)+' '+(document.documentElement.getAttribute('lang')==='ar'?'مفحوص':'inspected')); spawnPulse(center, obj.position, a.color);
+    }); agentsList.appendChild(row); });
+
+    // language toggle
+    const langBtn = document.getElementById('langBtn'); function applyLang(l){ if(l==='ar'){ document.documentElement.setAttribute('lang','ar'); document.documentElement.setAttribute('dir','rtl'); langBtn.textContent='English'; document.getElementById('enterLink').textContent='دخول إلى HEAVEN'; } else { document.documentElement.setAttribute('lang','en'); document.documentElement.setAttribute('dir','ltr'); langBtn.textContent='العربية'; document.getElementById('enterLink').textContent='Enter HEAVEN'; } }
+    const stored = localStorage.getItem('heaven_lang')||'ar'; applyLang(stored);
+    langBtn.addEventListener('click', ()=>{ const cur = document.documentElement.getAttribute('lang'); const next = cur==='ar'?'en':'ar'; applyLang(next); localStorage.setItem('heaven_lang', next); });
+
+    // demo modal quick open mapping to simStart
+    document.getElementById('demoOpen').addEventListener('click', ()=>{ document.getElementById('simStart').click(); });
+
+    // Qutmir glyph: simple canvas-based accent badge drawn top-left on HUD (we'll use DOM for now)
+    // The official logo is preserved; Qutmir identity is implied via accent colors applied to agents and confirmed pulses.
+
+  })();
+  </script>
 </body>
 </html>
